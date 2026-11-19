@@ -5,8 +5,9 @@ export type Profile = {
   initials: string;
   role: string;
   location: string;
-  /** Short display name used on the billboard */
+  /** Short display name used in the hero headline */
   shortName: string;
+  tagline: string;
   intro: string;
   bio: string;
   email: string;

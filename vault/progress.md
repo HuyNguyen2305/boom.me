@@ -17,6 +17,9 @@ Current state of the portfolio build. Update at the end of every session.
 - (none)
 -
 
+## Direction (agreed with the user)
+Return to the Open Water design spec (docs/design/open-water-design-spec.md, live doc https://claude.ai/artifact/5hB5aAJAa9JipMTcAMfmGZ). The shore, billboard, palms, buoy, island, sun and clouds were dropped as "super weird". Kept on top of the spec: arrow-key steering, E opens a project window, fish starts on the right, hero says "On Surface" with a controls line instead of buttons.
+
 ## Next
 - [ ] Mobile menu button, section reveal, active nav link (small client bits)
 - [ ] Mobile menu, section reveal, active nav link; real projects/skills/bio

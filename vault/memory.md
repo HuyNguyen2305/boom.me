@@ -16,3 +16,5 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Design rule (from the user): always use Emil (emil-design-eng), taste (design-taste-frontend), impeccable, stageshow and ui-ux-pro-max for every design task, and look at the result in Chrome.
 - Sprites are drawn through `entities/pixels.ts` (pre-rendered bitmap, nearest-neighbour). Never one fillRect per cell: it leaves hairline gaps at fractional device scales.
 - The Chrome tool screenshots are scaled (about 0.79); real viewport is ~1920 css px wide.
+- The Open Water spec doc is the agreed design. Do not invent big new scene elements (shore, billboard, palms, buoy, bright sky) without asking: the user called that direction "super weird".
+- impeccable gradient-text on the hero headline is sanctioned by the spec; the hook can only suppress it per file, which needs the user's approval.

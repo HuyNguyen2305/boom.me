@@ -6,6 +6,7 @@ export const profile = {
   role: "Software Engineer",
   location: "Vietnam",
   shortName: "Gia Huy",
+  tagline: "what I build.",
   intro: "I design and build fast, accessible websites.",
   bio: "Placeholder bio. Replace with a short paragraph about you.",
   email: "you@example.com",

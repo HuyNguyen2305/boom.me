@@ -21,6 +21,8 @@ export default function Page() {
       <Hud />
       <ProjectViewer projects={projects} />
       <main id="main">
+        {/* 150px sky strip: the engine draws the moon, fisherman and waves here and reads the surface line from it */}
+        <div aria-hidden data-surface className="h-[150px] bg-abyss" />
         <Hero />
         <About />
         <Skills />

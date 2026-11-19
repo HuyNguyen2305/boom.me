@@ -1,12 +1,9 @@
-import { drawBoat, WIDE } from "./entities/boat";
-import { drawBuoy } from "./entities/buoy";
+import { drawSurface } from "./entities/boat";
 import { drawSeafloor } from "./entities/seafloor";
 import { createSchool, drawSchool } from "./entities/school";
-import { drawShore } from "./entities/shore";
-import { drawSky } from "./entities/sky";
 import { depthBus } from "./events";
 import { createInput } from "./input";
-import { depthAt, readFloor, readLane, readShore, readStops, readSurface, type Stop } from "./scroll";
+import { depthAt, readFloor, readLane, readStops, readSurface, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
 import type { World } from "./world";
 
@@ -26,7 +23,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
   let swimX = 0; // distance swum left from the home lane
   let raf = 0;
   const world: World = {
-    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, shoreEnd: 0, shoreRight: 0, billboardLeft: 0, billboardRight: 0, laneX: 0, depth: 0,
+    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, laneX: 0, depth: 0,
     moving: 0, reduced: opts.reducedMotion, fishX: 0, fishY: 0, facing: 1,
   };
 
@@ -34,11 +31,6 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     stops = readStops();
     world.surfaceY = readSurface();
     world.floorY = readFloor();
-    const shore = readShore();
-    world.shoreEnd = shore.end;
-    world.shoreRight = shore.right;
-    world.billboardLeft = shore.billboardLeft;
-    world.billboardRight = shore.billboardRight;
     world.laneX = readLane();
   }
 
@@ -83,11 +75,8 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     depthBus.set(world.depth);
 
     ctx.clearRect(0, 0, world.w, world.h);
-    drawSky(ctx, world);
-    drawShore(ctx, world);
     drawSchool(ctx, world, school);
-    if (world.w >= WIDE) drawBuoy(ctx, world, world.laneX);
-    drawBoat(ctx, world);
+    drawSurface(ctx, world);
     drawSeafloor(ctx, world);
 
     if (!opts.reducedMotion) {

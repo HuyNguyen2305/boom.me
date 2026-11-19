@@ -47,7 +47,7 @@ public/
 src/
   app/
     layout.tsx            # <html>, fonts via next/font, metadata + Open Graph
-    page.tsx              # the one page: sky block + <OceanLayer/> + <Nav/> + <Hud/> + <ProjectViewer/> + sections
+    page.tsx              # the one page: 150px sky strip + <OceanLayer/> + <Nav/> + <Hud/> + <ProjectViewer/> + sections
     globals.css           # Tailwind import + @theme color tokens from the design spec
     opengraph-image.png   # link preview image
     icon.png              # favicon
@@ -62,7 +62,7 @@ src/
     Ocean.tsx             # mounts canvas, starts/stops engine
     engine.ts             # createEngine(canvas, opts): rAF loop, resize, pause on hidden tab
     world.ts              # world state: fish, schools, bubbles, boat, depth
-    entities/             # sky, shore (palms), boat, buoy, school, seafloor
+    entities/             # boat (moon, fisherman, waves), school, seafloor
     input.ts              # arrow-key steering; off while typing or a dialog is open
     scroll.ts             # reads [data-dive-stop] rects, maps scroll to fish target
     sprites.ts            # sheet loading, frame lookup, nearest-neighbor drawing

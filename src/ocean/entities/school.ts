@@ -103,31 +103,25 @@ function shark(tailDy: number): string[] {
   return g.map((row) => row.join(""));
 }
 
-/**
- * Whale at 2px: chunky outlined body that tapers into the tail, pale throat, small flipper, and a tail that curves up
- * into two flukes. The whole tail (stock and flukes) swings about a hinge at the rear of the body.
- */
-function whale(angle: number): string[] {
+/** The whale drawn straight: tapered body, a long tail arm and flukes. Foreshortening shrinks the flukes as the tail passes level. */
+function whaleSource(fluke: number) {
   const W = 112;
-  const H = 58;
-  const cx = 36;
-  const cy = 34;
+  const H = 64;
+  const cx = 37;
+  const cy = 32;
   const g = grid(W, H);
-  const set = setter(g);
-  const [hx, hy] = [66, cy + 1]; // hinge
-  const a = (angle * Math.PI) / 180;
-  const [ca, sa] = [Math.cos(a), Math.sin(a)];
-  const tail = (x: number, y: number, v: string) => set(Math.round(hx + x * ca - y * sa), Math.round(hy + x * sa + y * ca), v);
-  for (let i = 0; i <= 160; i++) {
-    const u = i / 160;
-    const x = 2 * (1 - u) * u * 22 + u * u * 18;
-    const y = 2 * (1 - u) * u * 3 - u * u * 22;
-    const r = 4.6 - u * 1.8; // the stock thins toward the flukes
-    for (let dy = -5; dy <= 5; dy += 0.5) for (let dx = -5; dx <= 5; dx += 0.5) if (dx * dx + dy * dy <= r * r) tail(x + dx, y + dy, dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
+  const put = setter(g);
+  const set = (x: number, y: number, v: string) => put(Math.round(x), Math.round(y), v);
+  // tail arm: a straight limb that thins toward the flukes
+  const [hx, hy, L] = [62, cy + 1, 34];
+  for (let i = 0; i <= 200; i++) {
+    const u = i / 200;
+    const r = 6.4 - u * 3;
+    for (let dy = -5; dy <= 5; dy += 0.5) for (let dx = -5; dx <= 5; dx += 0.5) if (dx * dx + dy * dy <= r * r) set(hx + u * L + dx, hy + dy, dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
   }
-  lobe(tail, 18, -20, -0.9, -0.5, 11, 3.2); // smaller left fluke
-  lobe(tail, 18, -20, 1, -0.25, 15, 3.6); // larger right fluke
-  // body: a boxy superellipse (big blunt head) whose rear half narrows into the tail stock
+  // two flukes spread at right angles to the arm, swept back a little
+  for (const side of [-1, 1]) lobe(set, hx + L, hy, 0.3, side * 0.95, 19 * fluke, 4.6);
+  // body: a boxy superellipse (big blunt head) whose rear half narrows into the arm
   const rx = 35;
   const ry = 16;
   for (let r = 0; r < H; r++) {
@@ -142,17 +136,47 @@ function whale(angle: number): string[] {
       const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 36) * 0.85; // jagged pale throat, rising into the flank
       if (r > throat) v = (c * 7 + r * 3) % 11 === 0 ? "w" : "W";
       else if (r > throat - 2 && r <= throat && c < 62) v = "d"; // dark seam above the throat
-      set(c, r, v);
+      put(c, r, v);
     }
   }
-  [[13, 29], [14, 29], [13, 30], [14, 30], [13, 31], [14, 31]].forEach(([c, r]) => set(c!, r!, "E")); // eye
-  [[15, 29], [15, 30], [15, 31]].forEach(([c, r]) => set(c!, r!, "e"));
+  [[13, 27], [14, 27], [13, 28], [14, 28], [13, 29], [14, 29]].forEach(([c, r]) => put(c!, r!, "E")); // eye
+  [[15, 27], [15, 28], [15, 29]].forEach(([c, r]) => put(c!, r!, "e"));
   for (let i = 0; i < 12; i++) {
     const x = 38 + Math.round(i * 0.8);
     const y = cy + 12 + i;
     const w = Math.max(2, 5 - Math.floor(i / 3));
-    for (let k = 0; k < w; k++) set(x + k, y, k === w - 1 ? "h" : "G"); // short flipper, light along its lower edge
+    for (let k = 0; k < w; k++) put(x + k, y, k === w - 1 ? "h" : "G"); // short flipper, light along its lower edge
   }
+  return { g, cy };
+}
+
+/**
+ * Whale at 2px. The rear half of the whole body, tail arm and flukes bend together along one curved spine that pivots
+ * at the middle of the body, like a lever: tip up (beta > 0), level, tip down (beta < 0).
+ */
+function whale(betaDeg: number): string[] {
+  const beta = (betaDeg * Math.PI) / 180;
+  const { g: src, cy: cy0 } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin(beta)));
+  const W = 120;
+  const H = 100;
+  const oy = 56; // row of the body's centre line in the output
+  const x0 = 32; // where the spine starts to bend
+  const k = beta / 64;
+  const g = grid(W, H);
+  const put = setter(g);
+  src.forEach((row, y) =>
+    row.forEach((v, x) => {
+      if (v === ".") return;
+      for (const ox of [-0.25, 0.25]) {
+        for (const oyy of [-0.25, 0.25]) {
+          const s = x + ox - x0;
+          const d = y + oyy - cy0;
+          if (s <= 0 || Math.abs(k) < 1e-6) put(Math.round(x + ox), Math.round(oy + d), v);
+          else put(Math.round(x0 + Math.sin(k * s) / k + d * Math.sin(k * s)), Math.round(oy + (Math.cos(k * s) - 1) / k + d * Math.cos(k * s)), v);
+        }
+      }
+    }),
+  );
   outline(g);
   return g.map((row) => row.join(""));
 }
@@ -208,7 +232,7 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
   shark: { frames: [shark(-1), shark(1)], pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [whale(-16), whale(0), whale(16), whale(0)], pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
+  whale: { frames: [80, 45, 5, -30, -55, -30, 5, 45].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

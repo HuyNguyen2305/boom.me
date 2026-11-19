@@ -23,3 +23,4 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Controls hint is drawn on the canvas above the fish; DOM keeps an sr-only list. Do not add a bottom-centre E hint.
 - next.config devIndicators is false: the user does not want the Next.js dev badge.
 - Corals: medium size (12-20 cells at 3px), varied shapes; no mesh fans. The wreck lives on the right of the sea floor (entities/seafloor.ts).
+- Pixel-size trial: main fish, shark and whale are drawn at 2px (grids 36x21, 76x40, 105x52); everything else stays 3px. User asked for more detail via smaller pixels; compare before converting the rest.

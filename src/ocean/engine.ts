@@ -9,7 +9,7 @@ import type { World } from "./world";
 
 type Bubble = { x: number; y: number; life: number };
 
-const PX = 3; // one sprite pixel = 3 css pixels (72 x 42 fish)
+const PX = 3; // one sprite pixel = 3 css pixels (72 x 42 fish, as in the spec)
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
   const ctx = canvas.getContext("2d")!;

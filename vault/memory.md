@@ -26,3 +26,4 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Pixel-size trial: main fish, shark and whale are drawn at 2px (grids 36x21, 76x40, 105x52); everything else stays 3px. User asked for more detail via smaller pixels; compare before converting the rest.
 - Whale and shark art follows the user's pixel references: chunky dark outline, flat shading, pale belly, whale tail curves up into flukes, shark has a fat crescent tail. Preview sprites offline by transpiling school.ts and rendering with PIL (no dev server needed).
 - Whale tail (user feedback): the whole rear half of the body bends with the tail like a lever, tip up then tip down; never move only the tip or hinge a separate tail piece. Built by bending a straight source raster along a curved spine (school.ts whale()).
+- Whale silhouette (user feedback): one continuous taper from the body into a long slim tail, never a thick stick stuck on an oval. Shark is approved as is.

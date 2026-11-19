@@ -135,34 +135,32 @@ function shark(betaDeg: number): string[] {
 
 /** The whale drawn straight: tapered body, a long tail arm and flukes. Foreshortening shrinks the flukes as the tail passes level. */
 function whaleSource(fluke: number) {
-  const W = 112;
+  const W = 118;
   const H = 64;
   const cx = 37;
   const cy = 32;
   const g = grid(W, H);
   const put = setter(g);
   const set = (x: number, y: number, v: string) => put(Math.round(x), Math.round(y), v);
-  // tail arm: a straight limb that thins toward the flukes
-  const [hx, hy, L] = [62, cy + 1, 30];
-  for (let i = 0; i <= 200; i++) {
-    const u = i / 200;
-    const r = 8.4 - u * 4.6; // thick where it leaves the body
-    for (let dy = -5; dy <= 5; dy += 0.5) for (let dx = -5; dx <= 5; dx += 0.5) if (dx * dx + dy * dy <= r * r) set(hx + u * L + dx, hy + dy, dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
-  }
-  // two flukes spread at right angles to the arm, swept back a little
-  for (const side of [-1, 1]) lobe(set, hx + L, hy, 0.3, side * 0.95, 20 * fluke, 4.8);
-  // body: a boxy superellipse (big blunt head) whose rear half narrows into the arm
+  // one continuous silhouette: a blunt head, the thickest point near the middle, then a long taper that keeps getting
+  // slimmer toward the tail instead of ending in a stick
   const rx = 35;
   const ry = 16;
-  for (let r = 0; r < H; r++) {
-    for (let c = 0; c < W; c++) {
-      const dx = (c - cx) / rx;
-      const taper = dx > 0.23 ? 1 - 0.42 * Math.pow((dx - 0.23) / 0.77, 1.5) : 1; // a broad tail root
-      const dy = (r - cy) / (ry * taper);
-      if (Math.abs(dx) ** 3.2 + Math.abs(dy) ** 2.2 > 1) continue;
+  const xe = 98; // where the tail ends and the flukes begin
+  const half = (c: number) => {
+    if (c <= cx) return ry * Math.pow(Math.max(0, 1 - Math.abs((c - cx) / rx) ** 3.2), 1 / 2.2);
+    return Math.max(3, ry * Math.pow(Math.max(0, 1 - (c - cx) / (xe - cx)), 1.5));
+  };
+  for (const side of [-1, 1]) lobe(set, xe, cy, 0.3, side * 0.95, 27 * fluke, 5.6); // flukes at right angles to the tail
+  for (let c = 0; c <= xe; c++) {
+    const hh = half(c);
+    const dx = (c - cx) / rx;
+    for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {
+      const fr = (r - cy) / Math.max(hh, 1);
       const dyo = (r - cy) / ry;
-      let v = dyo < -0.55 ? "h" : "G";
-      if (dx * 0.9 + dyo * 0.6 > 0.62) v = "d"; // shaded rear flank, a soft diagonal
+      let v = "G";
+      if (fr < -0.45) v = "h";
+      else if (dx * 0.9 + dyo * 0.6 > 0.62 || (c > cx + 10 && fr > 0.3)) v = "d"; // shaded rear flank and underside of the tail
       const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 36) * 0.85; // jagged pale throat, rising into the flank
       if (r > throat) v = (c * 7 + r * 3) % 11 === 0 ? "w" : "W";
       else if (r > throat - 2 && r <= throat && c < 62) v = "d"; // dark seam above the throat
@@ -183,7 +181,7 @@ function whaleSource(fluke: number) {
 /** The whale swims: its whole rear half bends with the tail like a lever (tip up, level, tip down). */
 function whale(betaDeg: number): string[] {
   const { g, cy } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
-  return bend(g, cy, 32, 60, betaDeg, 120, 100, 56);
+  return bend(g, cy, 30, 72, betaDeg, 128, 100, 56);
 }
 
 function octopus(f: number): string[] {
@@ -237,7 +235,7 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
   shark: { frames: [10, 0, -10, 0].map(shark), pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [50, 28, 4, -20, -34, -20, 4, 28].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
+  whale: { frames: [44, 24, 4, -18, -30, -18, 4, 24].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

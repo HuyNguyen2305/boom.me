@@ -15,7 +15,65 @@ export const profile = {
   linkedin: "https://www.linkedin.com/",
 } satisfies Profile;
 
-export const skills = [] satisfies SkillGroup[] as SkillGroup[];
+export const skills: SkillGroup[] = [
+  {
+    name: "Frontend",
+    items: [
+      { name: "React", icon: "react" },
+      { name: "Next.js", icon: "nextjs" },
+      { name: "Tailwind CSS", icon: "tailwindcss" },
+      { name: "HTML5", icon: "html5" },
+      { name: "CSS3", icon: "css3" },
+    ],
+  },
+  {
+    name: "Backend",
+    items: [
+      { name: "Node.js", icon: "nodejs" },
+      { name: "Express", icon: "expressjs" },
+      { name: "Supabase", icon: "supabase" },
+    ],
+  },
+  {
+    name: "Data & AI",
+    items: [
+      { name: "PostgreSQL", icon: "postgresql" },
+      { name: "MySQL", icon: "mysql" },
+      { name: "MongoDB", icon: "mongodb" },
+      { name: "SQLite", icon: "sqlite" },
+      { name: "Redis", icon: "redis" },
+    ],
+  },
+  {
+    name: "Cloud & Ops",
+    items: [
+      { name: "Docker", icon: "docker" },
+      { name: "AWS", icon: "amazonwebservices" },
+      { name: "Google Cloud", icon: "googlecloud" },
+      { name: "Cloudflare", icon: "cloudflare", detail: true },
+      { name: "Vercel", icon: "vercel" },
+      { name: "Render", icon: "render" },
+    ],
+  },
+  {
+    name: "Languages",
+    items: [
+      { name: "JavaScript", icon: "javascript", detail: true },
+      { name: "TypeScript", icon: "typescript" },
+      { name: "Python", icon: "python" },
+      { name: "Go", icon: "golang" },
+      { name: "Java", icon: "java" },
+    ],
+  },
+  {
+    name: "AI tools",
+    items: [
+      { name: "Claude", icon: "claude" },
+      { name: "GitHub Copilot", icon: "githubcopilot" },
+      { name: "ChatGPT", icon: "chatgpt" },
+    ],
+  },
+];
 
 // Placeholder projects: replace with real ones. An empty array shows "Coming soon" tiles.
 export const projects: Project[] = [

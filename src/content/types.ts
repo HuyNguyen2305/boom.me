@@ -16,7 +16,8 @@ export type Profile = {
   linkedin: string;
 };
 
-export type SkillGroup = { name: string; items: string[] };
+/** `icon` is a file name in public/skills (without .svg); `detail` keeps its inner shapes (grayscale) instead of one white silhouette */
+export type Skill = { name: string; icon: string; detail?: boolean };
 
 export type Project = {
   title: string;
@@ -29,3 +30,5 @@ export type Project = {
   live?: string;
   image?: string;
 };
+
+export type SkillGroup = { name: string; items: Skill[] };

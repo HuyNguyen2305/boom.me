@@ -23,10 +23,9 @@
   --radius-*: initial;
 }
 
-/* the content column sits 6rem left of centre, toward the fisherman */
-.column { margin-inline: auto; max-width: 64rem; padding-inline: 1rem; }
+/* one wide centred column */
+.column { margin-inline: auto; max-width: 80rem; padding-inline: 1rem; }
 @media (min-width: 40rem) { .column { padding-inline: 1.5rem; } }
-@media (min-width: 64rem) { .column { margin-left: max(1rem, calc((100vw - 64rem) / 2 - 6rem)); margin-right: auto; } }
 
 html {
   color-scheme: dark;
@@ -89,3 +88,28 @@ dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
 @media (prefers-reduced-motion: reduce) {
   dialog.project, dialog.project::backdrop { transition: none; transform: none; }
 }
+
+/* Skills: icons drift right to left, fading in and out at the edges. The track holds the list twice, so -50% loops it. */
+.skills-fade {
+  /* full viewport width: pull back to the viewport's left edge, mirroring .column's left edge */
+  --col-left: 1rem;
+  width: 100vw; margin-left: calc(-1 * var(--col-left));
+  position: relative; z-index: 20; /* above the ocean canvas (z-10) so fish swim behind the boxes */
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+@media (min-width: 40rem) { .skills-fade { --col-left: 1.5rem; } }
+@media (min-width: 80rem) { .skills-fade { --col-left: calc(max(0rem, (100vw - 80rem) / 2) + 1.5rem); } }
+.skills-marquee { display: flex; flex-wrap: wrap; gap: 1rem; }
+.skills-label {
+  flex-shrink: 0; align-self: center; writing-mode: vertical-rl; transform: rotate(180deg);
+  font: 500 0.75rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-driftwood);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skills-marquee { flex-wrap: nowrap; width: max-content; animation: marquee 60s linear infinite; }
+}
+/* reduced motion: one static copy, no loop */
+@media (prefers-reduced-motion: reduce) {
+  .skills-marquee [aria-hidden] { display: none; }
+}
+@keyframes marquee { to { transform: translateX(calc(-50% - 0.5rem)); } }

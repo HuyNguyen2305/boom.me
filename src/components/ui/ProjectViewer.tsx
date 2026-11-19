@@ -88,8 +88,8 @@ export function ProjectViewer({ projects }: { projects: Project[] }) {
             </ul>
             {(p.repo || p.live) && (
               <div className="flex gap-4 text-sm text-teal">
-                {p.repo && <a href={p.repo}>Repo</a>}
-                {p.live && <a href={p.live}>Live</a>}
+                {p.repo && <a href={p.repo} target="_blank" rel="noopener noreferrer">Repo</a>}
+                {p.live && <a href={p.live} target="_blank" rel="noopener noreferrer">Live</a>}
               </div>
             )}
           </div>

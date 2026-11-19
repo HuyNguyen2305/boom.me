@@ -1,13 +1,10 @@
-import { profile } from "@/content/site";
-
-const links = ["about", "skills", "projects", "contact"];
+const links = ["about", "skills", "works", "contact"];
 
 export function Nav() {
   return (
-    <header className="sticky top-0 z-20 border-b border-teal/15 bg-abyss/80 backdrop-blur">
-      <nav aria-label="Main" className="column flex h-14 items-center justify-between">
-        <a href="#top" className="font-display font-extrabold text-teal">{profile.initials}</a>
-        <ul className="flex gap-4 text-sm sm:gap-6">
+    <header className="sticky top-0 z-50 border-b border-teal/15 bg-abyss">
+      <nav aria-label="Main" className="column flex h-14 items-center justify-center">
+        <ul className="flex gap-6 text-sm sm:gap-12">
           {links.map((l) => (
             <li key={l}>
               <a href={`#${l}`} className="capitalize text-mist hover:text-teal">{l}</a>

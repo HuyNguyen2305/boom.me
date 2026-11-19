@@ -2,17 +2,23 @@ import type { Profile, Project, SkillGroup } from "./types";
 
 export const profile = {
   name: "Nguyễn Trần Gia Huy",
-  initials: "GH",
   role: "Software Engineer",
   location: "Vietnam",
-  shortName: "Gia Huy",
-  tagline: "what I build.",
-  intro: "I design and build fast, accessible websites.",
-  bio: "Placeholder bio. Replace with a short paragraph about you.",
-  email: "you@example.com",
+  shortName: "Huy Nguyen",
+  tagline: "Software Engineer.",
+  intro: "I design, build and deploy fast, reliable applications and websites.",
+  bio: "Energetic software engineer. I take ideas from first sketches to shipped products.",
+  highlights: [
+    { label: "Analyse & design", text: "Turning fuzzy needs into clear, usable designs." },
+    { label: "Build & deploy", text: "Projects taken end to end, live and reliable." },
+    { label: "Team or solo", text: "Happy in a team, just as effective alone." },
+    { label: "AI-first", text: "Making the most of AI at every step of the work." },
+    { label: "Always learning", text: "Eager to explore what comes next." },
+  ],
+  email: "huyworkandcontact@gmail.com",
   openToWork: true,
   github: "https://github.com/HuyNguyen2305",
-  linkedin: "https://www.linkedin.com/",
+  linkedin: "https://www.linkedin.com/in/huynguyen2305/",
 } satisfies Profile;
 
 export const skills: SkillGroup[] = [

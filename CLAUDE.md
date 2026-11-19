@@ -79,7 +79,7 @@ docs/design/              # spec, prototype, plan
 Rules:
 - Content lives only in `src/content/site.ts`, typed with `satisfies`. Empty
   `skills`/`projects` arrays render the "Coming soon" `EmptyState`.
-- Everything is a server component except `OceanLayer`, `Ocean`, `Hud`, `ProjectViewer` and
+- Everything is a server component except `OceanLayer`, `Ocean`, `Hud`, `ProjectViewer`, `SkillArrows` and
   `CopyEmail`. Sections ship no JavaScript; all motion lives in `ocean/`.
 - `components/`, `ocean/` and `content/` never import each other's internals; only
   `app/page.tsx` wires them together. Sections never know the game exists: the engine

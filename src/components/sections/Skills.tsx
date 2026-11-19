@@ -1,5 +1,6 @@
 import { skills } from "@/content/site";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SkillArrows } from "@/components/ui/SkillArrows";
 import { Section } from "./Section";
 
 const box = "flex h-40 w-32 shrink-0 flex-col items-center justify-center gap-4 border border-teal/30 bg-reef sm:h-52 sm:w-44";
@@ -10,7 +11,8 @@ export function Skills() {
       {skills.length === 0 ? (
         <div className="grid gap-4 sm:grid-cols-3"><EmptyState count={3} /></div>
       ) : (
-        <div className="skills-fade">
+        <div className="skills-bleed group/bleed">
+              <div className="skills-fade">
           <ul className="skills-marquee" aria-label="Tools I use">
             {/* the list is rendered twice for a seamless loop; the copy is hidden from assistive tech */}
             {[0, 1].map((copy) =>
@@ -28,6 +30,8 @@ export function Skills() {
               ]),
             )}
           </ul>
+              </div>
+              <SkillArrows />
         </div>
       )}
     </Section>

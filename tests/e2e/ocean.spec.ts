@@ -24,7 +24,7 @@ test("hero says On Surface, describes the controls and has no action buttons", a
   test.skip(desktopOnly(page.viewportSize()?.width), "controls are for keyboards");
   await page.goto("/");
   await expect(page.getByText("On Surface")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("what I build.");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Software Engineer.");
   await expect(page.getByText("Down arrow: dive")).toBeAttached(); // visible hint floats above the fish on the canvas
   await expect(page.getByRole("link", { name: /start the dive/i })).toHaveCount(0);
 });
@@ -41,7 +41,7 @@ test("arrow down dives", async ({ page }) => {
 test("E opens the project window, Esc closes it", async ({ page }) => {
   test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
   await page.goto("/");
-  await page.locator("#projects").scrollIntoViewIfNeeded();
+  await page.locator("#works").scrollIntoViewIfNeeded();
   await page.evaluate(() => document.querySelector("[data-project]")!.scrollIntoView({ block: "center", behavior: "instant" }));
   await page.keyboard.press("e");
   const dialog = page.getByRole("dialog");

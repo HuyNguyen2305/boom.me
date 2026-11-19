@@ -13,7 +13,7 @@ import { projects } from "@/content/site";
 export default function Page() {
   return (
     <>
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-30 focus:bg-teal focus:p-2 focus:text-abyss">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-[60] focus:bg-teal focus:p-2 focus:text-abyss">
         Skip to content
       </a>
       <OceanLayer />
@@ -26,7 +26,7 @@ export default function Page() {
         <div className="flex min-h-[calc(100svh-3.5rem)] flex-col">
           <div aria-hidden data-surface className="h-[150px] shrink-0 bg-abyss" />
           <Hero />
-          <About className="flex-1" />
+          <About className="flex flex-1 flex-col justify-center" />
         </div>
         <Skills />
         <Projects />

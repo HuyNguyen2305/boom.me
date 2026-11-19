@@ -1,8 +1,5 @@
-export type Link = { label: string; href: string };
-
 export type Profile = {
   name: string;
-  initials: string;
   role: string;
   location: string;
   /** Short display name used in the hero headline */
@@ -10,6 +7,7 @@ export type Profile = {
   tagline: string;
   intro: string;
   bio: string;
+  highlights: { label: string; text: string }[];
   email: string;
   openToWork: boolean;
   github: string;

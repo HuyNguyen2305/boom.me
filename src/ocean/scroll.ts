@@ -12,6 +12,12 @@ export function readStops(): Stop[] {
   }));
 }
 
+/** Document y of the water surface: the bottom edge of the sky block. */
+export function readSurface(): number {
+  const sky = document.querySelector("[data-surface]");
+  return sky ? sky.getBoundingClientRect().bottom + scrollY : 0;
+}
+
 /** Document y of the bottom of the last stop (the sea floor). */
 export function readFloor(): number {
   const last = stopEls().at(-1);

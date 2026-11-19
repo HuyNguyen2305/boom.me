@@ -16,4 +16,27 @@ export const profile = {
 
 export const skills = [] satisfies SkillGroup[] as SkillGroup[];
 
-export const projects = [] satisfies Project[] as Project[];
+// Placeholder projects: replace with real ones. An empty array shows "Coming soon" tiles.
+export const projects: Project[] = [
+  {
+    title: "Project one",
+    description: "One line about what it does and who it is for.",
+    details: "Placeholder write-up. Explain the problem, your role and what you shipped.",
+    highlights: ["What you built", "A measurable result", "Something you learned"],
+    tech: ["TypeScript", "React"],
+  },
+  {
+    title: "Project two",
+    description: "One line about what it does and who it is for.",
+    details: "Placeholder write-up. Explain the problem, your role and what you shipped.",
+    highlights: ["What you built", "A measurable result", "Something you learned"],
+    tech: ["Next.js", "Tailwind"],
+  },
+  {
+    title: "Project three",
+    description: "One line about what it does and who it is for.",
+    details: "Placeholder write-up. Explain the problem, your role and what you shipped.",
+    highlights: ["What you built", "A measurable result", "Something you learned"],
+    tech: ["TypeScript", "Playwright"],
+  },
+];

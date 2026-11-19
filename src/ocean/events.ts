@@ -16,4 +16,3 @@ function createBus<T>(initial: T) {
 }
 
 export const depthBus = createBus(0);
-export const helmBus = createBus(false);

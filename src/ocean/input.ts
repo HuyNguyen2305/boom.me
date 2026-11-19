@@ -1,31 +1,33 @@
-import { helmBus } from "./events";
-
 const MAP: Record<string, string> = {
-  w: "up", arrowup: "up", s: "down", arrowdown: "down",
-  a: "left", arrowleft: "left", d: "right", arrowright: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
 };
 
-/** Helm mode: W/S (or Up/Down) rise and dive, A/D (or Left/Right) swim sideways. Esc always exits. */
+const isTyping = (t: EventTarget | null) =>
+  t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+
+/**
+ * Arrow keys steer the fish: up/down rise and dive (scroll the page), left/right swim sideways.
+ * Never active while typing in a field or while a dialog is open, so it cannot trap the keyboard.
+ */
 export function createInput() {
   const keys = new Set<string>();
   const onDown = (e: KeyboardEvent) => {
-    if (!helmBus.get()) return;
-    if (e.key === "Escape") return helmBus.set(false);
-    const dir = MAP[e.key.toLowerCase()];
-    if (!dir || e.ctrlKey || e.metaKey || e.altKey) return;
+    const dir = MAP[e.key];
+    if (!dir || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target) || document.querySelector("dialog[open]")) return;
     e.preventDefault();
     keys.add(dir);
   };
-  const onUp = (e: KeyboardEvent) => void keys.delete(MAP[e.key.toLowerCase()] ?? "");
+  const onUp = (e: KeyboardEvent) => void keys.delete(MAP[e.key] ?? "");
   const onBlur = () => keys.clear();
-  const off = helmBus.subscribe((on) => on || keys.clear());
   addEventListener("keydown", onDown);
   addEventListener("keyup", onUp);
   addEventListener("blur", onBlur);
   return {
     held: (d: string) => keys.has(d),
     destroy() {
-      off();
       removeEventListener("keydown", onDown);
       removeEventListener("keyup", onUp);
       removeEventListener("blur", onBlur);

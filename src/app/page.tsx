@@ -5,9 +5,10 @@ import { Hero } from "@/components/sections/Hero";
 import { Projects } from "@/components/sections/Projects";
 import { Skills } from "@/components/sections/Skills";
 import { OceanLayer } from "@/components/OceanLayer";
-import { HelmButton } from "@/components/ui/HelmButton";
 import { Hud } from "@/components/ui/Hud";
 import { Nav } from "@/components/ui/Nav";
+import { ProjectViewer } from "@/components/ui/ProjectViewer";
+import { projects } from "@/content/site";
 
 export default function Page() {
   return (
@@ -18,9 +19,10 @@ export default function Page() {
       <OceanLayer />
       <Nav />
       <Hud />
-      <HelmButton />
+      <ProjectViewer projects={projects} />
       <main id="main">
-        <div aria-hidden className="h-[150px]" />
+        {/* bright sky; the engine draws the sun, clouds, island and boat on it and reads the surface line from here */}
+        <div aria-hidden data-surface className="h-[300px] bg-gradient-to-b from-sky-top to-sky-bottom sm:h-[380px]" />
         <Hero />
         <About />
         <Skills />

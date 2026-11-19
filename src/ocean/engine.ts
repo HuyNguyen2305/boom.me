@@ -1,34 +1,37 @@
-import { drawSurface } from "./entities/boat";
+import { drawBoat } from "./entities/boat";
 import { drawSeafloor } from "./entities/seafloor";
 import { createSchool, drawSchool } from "./entities/school";
-import { depthBus, helmBus } from "./events";
+import { drawSky } from "./entities/sky";
+import { depthBus } from "./events";
 import { createInput } from "./input";
-import { depthAt, readFloor, readStops, type Stop } from "./scroll";
+import { depthAt, readFloor, readStops, readSurface, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
 import type { World } from "./world";
 
 type Bubble = { x: number; y: number; life: number };
 
 const PX = 6; // one sprite pixel = 6 css pixels (72 x 42 fish)
-const SURFACE_Y = 150; // matches the sky strip height in page.tsx
+const LANE = 170; // width of the fish's lane at the right edge
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
   const ctx = canvas.getContext("2d")!;
-  const input = createInput();
+  // reduced motion: leave the arrow keys to the browser's own scrolling
+  const input = opts.reducedMotion ? null : createInput();
   const school = createSchool();
   const bubbles: Bubble[] = [];
   let stops: Stop[] = [];
   let tilt = 0;
   let lastY = scrollY;
-  let swimX = 0; // helm offset from the home lane
+  let swimX = 0; // distance swum left from the home lane
   let raf = 0;
   const world: World = {
-    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: SURFACE_Y, floorY: 0, depth: 0,
+    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, depth: 0,
     moving: 0, reduced: opts.reducedMotion, fishX: 0, fishY: 0, facing: 1,
   };
 
   function measure() {
     stops = readStops();
+    world.surfaceY = readSurface();
     world.floorY = readFloor();
   }
 
@@ -53,28 +56,32 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     world.depth = Math.round(depthAt(stops, scrollY + world.h / 2));
     depthBus.set(world.depth);
 
-    if (helmBus.get() && !opts.reducedMotion) {
-      if (input.held("up")) scrollBy(0, -14);
-      if (input.held("down")) scrollBy(0, 14);
+    if (input) {
+      if (input.held("up")) scrollBy({ top: -14, behavior: "instant" });
+      if (input.held("down")) scrollBy({ top: 14, behavior: "instant" });
       const dx = (input.held("right") ? 1 : 0) - (input.held("left") ? 1 : 0);
-      if (dx) world.facing = dx > 0 ? 1 : -1;
-      swimX = Math.max(0, Math.min(world.w - 170, swimX + dx * 5));
-    } else if (swimX > 0) swimX = Math.max(0, swimX - 6); // glide home when helm is off
+      if (dx) world.facing = dx > 0 ? -1 : 1; // sprite head points left
+      swimX = Math.max(0, Math.min(world.w - LANE, swimX - dx * 5));
+    }
 
     const target = opts.reducedMotion ? 0 : Math.max(-1, Math.min(1, vy / 20)) * 32; // head-down when diving
     tilt += (target - tilt) * 0.1;
 
     const narrow = world.w < 640;
-    world.fishX = narrow ? world.w - 50 : 85 + swimX;
-    world.fishY = narrow ? world.h - 70 : world.h * 0.42 + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
+    const surfaceScreen = world.surfaceY - scrollY;
+    world.fishX = narrow ? world.w - 50 : world.w - 85 - swimX;
+    // below the waterline at the top of the page, then held at 42% of the screen
+    const base = narrow ? world.h - 70 : world.h * 0.42;
+    world.fishY = Math.max(base, surfaceScreen + 70) + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
 
     ctx.clearRect(0, 0, world.w, world.h);
+    drawSky(ctx, world);
     drawSchool(ctx, world, school);
-    drawSurface(ctx, world);
+    drawBoat(ctx, world);
     drawSeafloor(ctx, world);
 
     if (!opts.reducedMotion) {
-      if (Math.random() < 0.02 + world.moving * 0.08) bubbles.push({ x: world.fishX + world.facing * 30, y: world.fishY, life: 1 });
+      if (Math.random() < 0.02 + world.moving * 0.08) bubbles.push({ x: world.fishX - world.facing * 30, y: world.fishY, life: 1 });
       for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i]!;
         b.y -= 0.8;
@@ -118,7 +125,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
   return () => {
     cancelAnimationFrame(raf);
     ro.disconnect();
-    input.destroy();
+    input?.destroy();
     removeEventListener("resize", resize);
     removeEventListener("scroll", onScroll);
     document.removeEventListener("visibilitychange", onVisibility);

@@ -13,6 +13,7 @@ export function Projects() {
           projects.map((p, i) => (
             <article
               key={p.title}
+              data-project={i}
               className={`flex flex-col gap-3 border border-teal/20 bg-reef/80 p-4 backdrop-blur-sm hover:border-teal/50 motion-safe:transition motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 ${i === 0 ? "sm:col-span-2" : ""}`}
             >
               {p.image && (
@@ -24,10 +25,13 @@ export function Projects() {
               <ul className="flex flex-wrap gap-2">
                 {p.tech.map((t) => <li key={t}><Chip>{t}</Chip></li>)}
               </ul>
-              <div className="flex gap-4 text-sm text-teal">
-                {p.repo && <a href={p.repo}>Repo</a>}
-                {p.live && <a href={p.live}>Live</a>}
-              </div>
+              <button
+                type="button"
+                data-open-project={i}
+                className="mt-auto self-start text-sm text-teal underline-offset-4 hover:underline"
+              >
+                View details <span aria-hidden className="hidden font-mono text-xs text-mist sm:inline">· press E</span>
+              </button>
             </article>
           ))
         )}

@@ -1,61 +1,52 @@
 import type { World } from "../world";
 import { drawSprite } from "./pixels";
 
+// h straw hat, S skin, E eye, b beard, G shirt, W/D wooden hull
 const BOAT = [
-  "......HHHH......",
-  "......SSSS......",
-  "......SBBS......",
-  "....RRRRRRR.....",
-  "....RRRRRRR.....",
-  "WWWWWWWWWWWWWWWW",
-  ".WWWWWWWWWWWWWW.",
-  "..WWWWWWWWWWWW..",
+  ".......hhh........",
+  "......hhhhh.......",
+  "....hhhhhhhhh.....",
+  ".......SSSS.......",
+  ".......SESS.......",
+  ".......bbbb.......",
+  "......GGGGGG......",
+  "......GGGGGG......",
+  "WWDWWDWWDWWDWWDWWW",
+  ".WWDWWDWWDWWDWWDW.",
+  "..WWWWWWWWWWWWWW..",
 ];
-const COLORS = { H: "#c98b55", S: "#e8c9a0", B: "#dcebea", R: "#7fbf7a", W: "#8a5a33" };
-const MOON = [
-  "..MMMM..",
-  ".MMMM...",
-  "MMMM....",
-  "MMMM....",
-  "MMMM....",
-  ".MMMM...",
-  "..MMMM..",
-];
+const COLORS = { h: "#e0b050", S: "#e8c9a0", E: "#071c24", b: "#dcebea", G: "#7fbf7a", W: "#8a5a33", D: "#6e4526" };
+const PX = 5;
 
-/** Sky strip: moon, waves, fisherman in a boat with a speech bubble. */
-export function drawSurface(ctx: CanvasRenderingContext2D, w: World) {
+/** Fisherman in a wooden boat on the water line, plus the wave line itself. */
+export function drawBoat(ctx: CanvasRenderingContext2D, w: World) {
   const sy = w.surfaceY - w.scrollY;
-  if (sy < -120 || sy > w.h + 20) return;
+  if (sy < -80 || sy > w.h + 20) return;
   const t = w.reduced ? 0 : w.t;
-
-  drawSprite(ctx, MOON, { M: "#dcebea" }, w.w - 120, sy - 120, 5);
-
-  const bx = Math.max(24, w.w * 0.14);
   const bob = Math.sin(t / 900) * 2;
-  const px = 5;
-  const by = sy - 8 * px + bob + 6;
-  drawSprite(ctx, BOAT, COLORS, bx, by, px);
-  // fishing line into the water
-  ctx.strokeStyle = "rgb(220 235 234 / .6)";
-  ctx.beginPath();
-  ctx.moveTo(bx + 16 * px, by + 3 * px);
-  ctx.lineTo(bx + 16 * px + 20, sy + 60 + bob);
-  ctx.stroke();
-  // speech bubble
-  if (w.w >= 640) {
-    ctx.font = "12px ui-monospace, monospace";
-    const msg = "Hi! Grab a fish and dive.";
-    const tw = ctx.measureText(msg).width + 16;
-    ctx.fillStyle = "#0d2a33";
-    ctx.strokeStyle = "rgb(60 198 192 / .5)";
-    ctx.fillRect(bx + 100, by - 34, tw, 26);
-    ctx.strokeRect(bx + 100, by - 34, tw, 26);
-    ctx.fillStyle = "#dcebea";
-    ctx.fillText(msg, bx + 108, by - 17);
-  }
 
-  // wave line
-  ctx.strokeStyle = "#3cc6c0";
+  const bx = w.w * 0.34;
+  const by = sy - 11 * PX + bob + 10; // hull sits low in the water
+  drawSprite(ctx, BOAT, COLORS, bx, by, PX);
+
+  // rod from the hand, line dropping into the water
+  const hx = bx + 12 * PX;
+  const hy = by + 6 * PX;
+  ctx.strokeStyle = "#6e4526";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(hx, hy);
+  ctx.lineTo(hx + 7 * PX, hy - 4 * PX);
+  ctx.stroke();
+  ctx.strokeStyle = "rgb(255 255 255 / .7)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(hx + 7 * PX, hy - 4 * PX);
+  ctx.lineTo(hx + 7 * PX, sy + 70 + bob);
+  ctx.stroke();
+
+  // wave line, drawn last so it overlaps the hull and island
+  ctx.strokeStyle = "#9fe6e2";
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let x = 0; x <= w.w; x += 8) {

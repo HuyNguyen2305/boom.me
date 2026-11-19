@@ -6,7 +6,7 @@ test("every section renders and empty states show", async ({ page }) => {
   for (const name of ["About", "Skills", "Projects", "Contact"]) {
     await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
   }
-  await expect(page.getByText("Coming soon")).toHaveCount(6);
+  await expect(page.getByText("Coming soon")).toHaveCount(3);
 });
 
 test("no horizontal scroll", async ({ page }) => {

@@ -19,6 +19,11 @@ export function createSchool(): Fish[] {
 
 /** Background fish: teal near the surface, yellow mid-water, glowing lantern fish in the deep. */
 export function drawSchool(ctx: CanvasRenderingContext2D, w: World, school: Fish[]) {
+  const top = Math.max(0, w.surfaceY - w.scrollY);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, top, w.w, w.h - top); // underwater only
+  ctx.clip();
   const color = w.depth < 40 ? "#3cc6c0" : w.depth < 150 ? "#e0c25a" : "#b8f2ee";
   ctx.globalAlpha = 0.28;
   if (w.depth >= 150) {
@@ -38,6 +43,5 @@ export function drawSchool(ctx: CanvasRenderingContext2D, w: World, school: Fish
     drawSprite(ctx, SMALL, { S: color }, x, f.y * w.h, 4);
     ctx.restore();
   }
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }

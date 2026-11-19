@@ -19,6 +19,9 @@ export type SkillGroup = { name: string; items: string[] };
 export type Project = {
   title: string;
   description: string;
+  /** Longer write-up shown in the project window (press E) */
+  details: string;
+  highlights: string[];
   tech: string[];
   repo?: string;
   live?: string;

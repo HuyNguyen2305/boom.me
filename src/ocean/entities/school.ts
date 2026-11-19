@@ -27,6 +27,22 @@ function outline(g: string[][], v = "O") {
   edge.forEach(([c, r]) => (g[r]![c] = v));
 }
 
+/** No black line: edge cells get a lighter blue on top and a deeper blue elsewhere, so the silhouette stays readable. */
+function softRim(rows: string[]): string[] {
+  const at = (r: number, c: number) => rows[r]?.[c] ?? ".";
+  return rows.map((row, r) =>
+    [...row]
+      .map((v, c) => {
+        if (v === ".") return v;
+        if (at(r - 1, c) === "." && (v === "G" || v === "d")) return "h"; // light along the top edge
+        const open = at(r + 1, c) === "." || at(r, c - 1) === "." || at(r, c + 1) === ".";
+        if (!open) return v;
+        return v === "W" || v === "w" ? "p" : v === "E" ? v : "b"; // deeper blue (slate for the pale belly) on the other edges
+      })
+      .join(""),
+  );
+}
+
 /** Fills a leaf-shaped lobe along a direction (the whale's flukes). Coordinates stay fractional: the caller rotates and rounds. */
 function lobe(set: (c: number, r: number, v: string) => void, x: number, y: number, dx: number, dy: number, len: number, wid: number) {
   const n = Math.hypot(dx, dy);
@@ -43,7 +59,7 @@ function lobe(set: (c: number, r: number, v: string) => void, x: number, y: numb
  * Bends the rear of a straight sprite along a curved spine (tail tip up when beta > 0), pivoting at column x0 over
  * `len` cells, so the lower body and the tail move together. Returns the outlined rows.
  */
-function bend(src: string[][], cy0: number, x0: number, len: number, betaDeg: number, W: number, H: number, oy: number): string[] {
+function bend(src: string[][], cy0: number, x0: number, len: number, betaDeg: number, W: number, H: number, oy: number, outlineColor: string | null = "O"): string[] {
   const k = ((betaDeg * Math.PI) / 180) / len;
   const g = grid(W, H);
   const put = setter(g);
@@ -60,7 +76,7 @@ function bend(src: string[][], cy0: number, x0: number, len: number, betaDeg: nu
       }
     }),
   );
-  outline(g);
+  if (outlineColor) outline(g, outlineColor);
   return g.map((row) => row.join(""));
 }
 
@@ -139,12 +155,12 @@ function shark(betaDeg: number): string[] {
  * rounded flipper, and small flukes. Head on the left. Foreshortening shrinks the flukes as the tail passes level.
  */
 function whaleSource(fluke: number) {
-  const W = 126;
+  const W = 152;
   const H = 96;
   const g = grid(W, H);
   const put = setter(g);
   const set = (x: number, y: number, v: string) => put(Math.round(x), Math.round(y), v);
-  const [top, x0, headEnd, xe, hmax, rc] = [28, 3, 44, 108, 36, 8];
+  const [top, x0, headEnd, xe, hmax, rc] = [28, 3, 56, 132, 36, 8];
   // thickness: full height through the head, then a long taper that keeps narrowing toward the tail. The back stays flat.
   const thick = (x: number) => (x <= headEnd ? hmax : 4 + (hmax - 4) * Math.pow(1 - (x - headEnd) / (xe - headEnd), 1.35));
   for (const side of [-1, 1]) lobe(set, xe, top + thick(xe) / 2, 0.3, side * 0.95, (side < 0 ? 26 : 19) * fluke, side < 0 ? 6 : 5);
@@ -161,14 +177,14 @@ function whaleSource(fluke: number) {
       const fr = (y - t) / Math.max(1, b - t); // 0 at the back, 1 at the belly
       let v = "G";
       if (fr < 0.16) v = "h"; // light along the flat back
-      else if (x > 66 && fr > 0.55) v = "d"; // darker underside of the tail
+      else if (x > 80 && fr > 0.55) v = "d"; // darker underside of the tail
       const edge = 0.64 + Math.sin(x * 0.9) * 0.05;
-      if (x < 98 && fr > edge) v = (x * 7 + y * 3) % 11 === 0 ? "w" : "W"; // long pale belly with a jagged edge
-      else if (x < 98 && fr > edge - 0.07) v = "d"; // dark seam above it
+      if (x < 116 && fr > edge) v = (x * 7 + y * 3) % 11 === 0 ? "w" : "W"; // long pale belly with a jagged edge
+      else if (x < 116 && fr > edge - 0.07) v = "d"; // dark seam above it
       put(x, y, v);
     }
   }
-  for (let x = x0 + 3; x <= 40; x++) set(x, top + 28 + x * 0.03, "d"); // the long, narrow mouth under the head
+  for (let x = x0 + 3; x <= 52; x++) set(x, top + 28 + x * 0.03, "d"); // the long, narrow mouth under the head
   [[14, top + 14], [15, top + 14], [14, top + 15], [15, top + 15]].forEach(([x, y]) => set(x!, y!, "E")); // small eye
   // a short flipper: a tapered, rounded paddle that hangs from the belly and angles back
   for (let k = 0; k <= 17; k++) {
@@ -182,7 +198,7 @@ function whaleSource(fluke: number) {
 /** The whale swims: everything behind the head bends with the tail like a lever (tip up, level, tip down). */
 function whale(betaDeg: number): string[] {
   const { g, cy } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
-  return bend(g, cy, 44, 72, betaDeg, 140, 132, 76);
+  return softRim(bend(g, cy, 56, 84, betaDeg, 170, 132, 76, null));
 }
 
 function octopus(f: number): string[] {
@@ -236,7 +252,7 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
   shark: { frames: [10, 0, -10, 0].map(shark), pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [44, 24, 4, -18, -30, -18, 4, 24].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
+  whale: { frames: [44, 24, 4, -18, -30, -18, 4, 24].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", b: "#244f98", W: "#8f9db3", w: "#c3cfe2", p: "#7385a3", E: "#12306c", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

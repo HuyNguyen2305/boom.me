@@ -29,3 +29,4 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Whale silhouette (user feedback): one continuous taper from the body into a long slim tail, never a thick stick stuck on an oval. Shark is approved as is.
 - Main fish control: arrow up/down move the fish on screen between two limits; the page scrolls only when the fish is at a limit (or the page cannot scroll further). Fish eye has no white.
 - Whale design (user sketch): sperm whale. Big blunt box head with rounded corners, flat back to the tail, belly sags under the head then climbs to a thin tail, short paddle flipper, small flukes; head on the left in the sprite. Drawn straight in school.ts whaleSource(), bent by bend().
+- Whale has no black outline: shades of blue only (softRim in school.ts). Shark keeps its outline.

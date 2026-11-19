@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-abyss: #071c24;
+  --color-reef: #0d2a33;
+  --color-foam: #dcebea;
+  --color-mist: #8fb3b6;
+  --color-teal: #3cc6c0;
+  --color-kelp: #7fbf7a;
+  --color-driftwood: #c98b55;
+  --color-depth-0: #0b2530;
+  --color-depth-1: #09212a;
+  --color-depth-2: #081c24;
+  --color-depth-3: #06171e;
+  --color-depth-4: #041118;
+
+  --font-display: var(--font-manrope), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-*: initial;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+body { @apply bg-abyss text-foam font-sans antialiased; }
+
+:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+
+.dot-grid {
+  background-image: radial-gradient(rgb(60 198 192 / 0.18) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+}
+.ripple-lines {
+  background-image: repeating-linear-gradient(0deg, rgb(60 198 192 / 0.06) 0 1px, transparent 1px 8px);
+}
+@keyframes drift {
+  from { transform: translate(-3%, -2%) rotate(-2deg); }
+  to { transform: translate(3%, 2%) rotate(2deg); }
+}
+.hero-light {
+  background:
+    radial-gradient(40% 50% at 25% 30%, rgb(60 198 192 / 0.18), transparent),
+    radial-gradient(35% 45% at 75% 60%, rgb(60 198 192 / 0.12), transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-light { animation: drift 14s ease-in-out infinite alternate; }
+}

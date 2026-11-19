@@ -1,0 +1,32 @@
+# Installed agent skills / agents (reinstall with npx skills / impeccable / playwright-cli)
+.agents/
+.codex/
+skills-lock.json
+.claude/skills/
+.claude/agents/
+.claude/settings.local.json
+.claude/settings.json.graphify-bak
+
+# Playwright
+.playwright-cli/
+playwright-report/
+test-results/
+
+# graphify: keep graph.json + GRAPH_REPORT.md, ignore scratch and cache
+graphify-out/.graphify_*
+graphify-out/cache/
+graphify-out/cost.json
+
+# Obsidian vault: keep notes, ignore per-user/volatile state
+vault/.obsidian/workspace*.json
+vault/.obsidian/cache
+vault/.trash/
+
+# App
+node_modules/
+dist/
+.DS_Store
+
+.next/
+next-env.d.ts
+*.tsbuildinfo

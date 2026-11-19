@@ -14,7 +14,7 @@ export function Projects() {
             <article
               key={p.title}
               data-project={i}
-              className={`flex flex-col gap-3 border border-teal/20 bg-reef/80 p-4 backdrop-blur-sm hover:border-teal/50 motion-safe:transition motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 ${i === 0 ? "sm:col-span-2" : ""}`}
+              className={`flex flex-col gap-3 border border-teal/40 bg-reef p-4 hover:border-teal/50 motion-safe:transition motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 ${i === 0 ? "sm:col-span-2" : ""}`}
             >
               {p.image && (
                 // eslint-disable-next-line @next/next/no-img-element

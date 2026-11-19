@@ -4,7 +4,7 @@ const desktopOnly = (width?: number) => (width ?? 0) < 640;
 
 test("depth gauge follows scroll and canvas never blocks clicks", async ({ page }) => {
   await page.goto("/");
-  const canvas = page.locator("canvas");
+  const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("aria-hidden", "true");
   await expect(canvas).toHaveCSS("pointer-events", "none");
   if (desktopOnly(page.viewportSize()?.width)) return; // gauge hidden on phones
@@ -17,7 +17,7 @@ test("depth gauge follows scroll and canvas never blocks clicks", async ({ page 
 test("reduced motion still renders a still frame", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.locator("canvas")).toBeAttached();
+  await expect(page.locator("canvas").first()).toBeAttached();
 });
 
 test("hero says On Surface, describes the controls and has no action buttons", async ({ page }) => {
@@ -32,7 +32,7 @@ test("hero says On Surface, describes the controls and has no action buttons", a
 test("arrow down dives", async ({ page }) => {
   test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
   await page.goto("/");
-  await page.locator("canvas").waitFor(); // Ocean mounts after hydration; its key listener starts with it
+  await page.locator("canvas").first().waitFor(); // Ocean mounts after hydration; its key listener starts with it
   await page.keyboard.down("ArrowDown");
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
   await page.keyboard.up("ArrowDown");
@@ -61,7 +61,7 @@ test("hero and About fit on the first screen", async ({ page }) => {
 test("the fish can swim right as well as left", async ({ page }) => {
   test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
   await page.goto("/");
-  await page.locator("canvas").waitFor();
+  await page.locator("canvas").first().waitFor();
   await page.keyboard.down("ArrowRight");
   await page.waitForTimeout(600);
   await page.keyboard.up("ArrowRight");
@@ -79,7 +79,7 @@ test("the first screen is only sky, hero and About: Skills starts below the fold
 test("the fish swims between two limits before the page scrolls", async ({ page }) => {
   test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
   await page.goto("/");
-  await page.locator("canvas").waitFor();
+  await page.locator("canvas").first().waitFor();
   await page.keyboard.down("ArrowDown");
   await page.waitForTimeout(150);
   expect(await page.evaluate(() => scrollY)).toBe(0); // still inside the limits: only the fish moves

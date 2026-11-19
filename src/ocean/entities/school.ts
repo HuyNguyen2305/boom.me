@@ -27,15 +27,15 @@ function outline(g: string[][], v = "O") {
   edge.forEach(([c, r]) => (g[r]![c] = v));
 }
 
-/** Fills a leaf-shaped lobe along a direction (used for the whale's flukes). */
+/** Fills a leaf-shaped lobe along a direction (the whale's flukes). Coordinates stay fractional: the caller rotates and rounds. */
 function lobe(set: (c: number, r: number, v: string) => void, x: number, y: number, dx: number, dy: number, len: number, wid: number) {
   const n = Math.hypot(dx, dy);
   const [ux, uy] = [dx / n, dy / n];
-  for (let k = 0; k <= len; k++) {
+  for (let k = 0; k <= len; k += 0.5) {
     const w = 0.5 + wid * Math.sin(Math.PI * Math.pow(k / len, 0.75));
     const cx = x + ux * k;
     const cy = y + uy * k - (k * k) / len * 0.12; // tips curl up
-    for (let j = -w; j <= w; j += 0.5) set(Math.round(cx - uy * j), Math.round(cy + ux * j), j < -w * 0.3 ? "h" : "G");
+    for (let j = -w; j <= w; j += 0.25) set(cx - uy * j, cy + ux * j, j < -w * 0.3 ? "h" : "G");
   }
 }
 
@@ -103,37 +103,43 @@ function shark(tailDy: number): string[] {
   return g.map((row) => row.join(""));
 }
 
-/** Whale at 2px: chunky outlined body, big blunt head, pale throat, tiny flipper and a tail that curves up into flukes. */
-function whale(tailDy: number): string[] {
-  const W = 100;
+/**
+ * Whale at 2px: chunky outlined body that tapers into the tail, pale throat, small flipper, and a tail that curves up
+ * into two flukes. The whole tail (stock and flukes) swings about a hinge at the rear of the body.
+ */
+function whale(angle: number): string[] {
+  const W = 112;
   const H = 58;
   const cx = 36;
   const cy = 34;
   const g = grid(W, H);
   const set = setter(g);
-  // tail stock: a thick S-curve rising from the rear of the body to the flukes
-  const fx = 84;
-  const fy = 14 + tailDy * 2;
-  for (let i = 0; i <= 80; i++) {
-    const u = i / 80;
-    const x = (1 - u) ** 2 * 62 + 2 * (1 - u) * u * 88 + u * u * fx;
-    const y = (1 - u) ** 2 * (cy + 1) + 2 * (1 - u) * u * (cy + 4) + u * u * (fy + 6);
-    const r = 4.6 - u * 1.8;
-    for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) if (dx * dx + dy * dy <= r * r) set(Math.round(x + dx), Math.round(y + dy), dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
+  const [hx, hy] = [66, cy + 1]; // hinge
+  const a = (angle * Math.PI) / 180;
+  const [ca, sa] = [Math.cos(a), Math.sin(a)];
+  const tail = (x: number, y: number, v: string) => set(Math.round(hx + x * ca - y * sa), Math.round(hy + x * sa + y * ca), v);
+  for (let i = 0; i <= 160; i++) {
+    const u = i / 160;
+    const x = 2 * (1 - u) * u * 22 + u * u * 18;
+    const y = 2 * (1 - u) * u * 3 - u * u * 22;
+    const r = 4.6 - u * 1.8; // the stock thins toward the flukes
+    for (let dy = -5; dy <= 5; dy += 0.5) for (let dx = -5; dx <= 5; dx += 0.5) if (dx * dx + dy * dy <= r * r) tail(x + dx, y + dy, dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
   }
-  lobe(set, fx, fy + 2, -0.9, -0.5, 11, 3.2); // smaller left fluke
-  lobe(set, fx, fy + 2, 1, -0.25, 15, 3.6); // larger right fluke
-  // body: a boxy superellipse so the head is big and blunt
+  lobe(tail, 18, -20, -0.9, -0.5, 11, 3.2); // smaller left fluke
+  lobe(tail, 18, -20, 1, -0.25, 15, 3.6); // larger right fluke
+  // body: a boxy superellipse (big blunt head) whose rear half narrows into the tail stock
   const rx = 35;
   const ry = 16;
   for (let r = 0; r < H; r++) {
     for (let c = 0; c < W; c++) {
       const dx = (c - cx) / rx;
-      const dy = (r - cy) / ry;
+      const taper = dx > 0.23 ? 1 - 0.62 * Math.pow((dx - 0.23) / 0.77, 1.5) : 1;
+      const dy = (r - cy) / (ry * taper);
       if (Math.abs(dx) ** 3.2 + Math.abs(dy) ** 2.2 > 1) continue;
-      let v = dy < -0.55 ? "h" : "G";
-      if (dx * 0.9 + dy * 0.6 > 0.62) v = "d"; // shaded rear flank, a soft diagonal
-      const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 36) * 0.85; // jagged pale throat, rising into the flank toward the tail
+      const dyo = (r - cy) / ry;
+      let v = dyo < -0.55 ? "h" : "G";
+      if (dx * 0.9 + dyo * 0.6 > 0.62) v = "d"; // shaded rear flank, a soft diagonal
+      const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 36) * 0.85; // jagged pale throat, rising into the flank
       if (r > throat) v = (c * 7 + r * 3) % 11 === 0 ? "w" : "W";
       else if (r > throat - 2 && r <= throat && c < 62) v = "d"; // dark seam above the throat
       set(c, r, v);
@@ -141,12 +147,11 @@ function whale(tailDy: number): string[] {
   }
   [[13, 29], [14, 29], [13, 30], [14, 30], [13, 31], [14, 31]].forEach(([c, r]) => set(c!, r!, "E")); // eye
   [[15, 29], [15, 30], [15, 31]].forEach(([c, r]) => set(c!, r!, "e"));
-  // short flipper, light along its lower edge
   for (let i = 0; i < 12; i++) {
     const x = 38 + Math.round(i * 0.8);
     const y = cy + 12 + i;
     const w = Math.max(2, 5 - Math.floor(i / 3));
-    for (let k = 0; k < w; k++) set(x + k, y, k === w - 1 ? "h" : "G");
+    for (let k = 0; k < w; k++) set(x + k, y, k === w - 1 ? "h" : "G"); // short flipper, light along its lower edge
   }
   outline(g);
   return g.map((row) => row.join(""));
@@ -203,7 +208,7 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
   shark: { frames: [shark(-1), shark(1)], pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [whale(-1), whale(1)], pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
+  whale: { frames: [whale(-16), whale(0), whale(16), whale(0)], pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

@@ -133,55 +133,56 @@ function shark(betaDeg: number): string[] {
   return bend(g, cy, 24, 48, betaDeg, 86, 66, 34);
 }
 
-/** The whale drawn straight: tapered body, a long tail arm and flukes. Foreshortening shrinks the flukes as the tail passes level. */
+/**
+ * The whale drawn straight, as a sperm whale (from the user's sketch): a huge blunt box of a head with rounded corners,
+ * a flat back running all the way to the tail, a belly that sags under the head and then climbs to a thin tail, a short
+ * rounded flipper, and small flukes. Head on the left. Foreshortening shrinks the flukes as the tail passes level.
+ */
 function whaleSource(fluke: number) {
-  const W = 118;
-  const H = 64;
-  const cx = 37;
-  const cy = 32;
+  const W = 126;
+  const H = 96;
   const g = grid(W, H);
   const put = setter(g);
   const set = (x: number, y: number, v: string) => put(Math.round(x), Math.round(y), v);
-  // one continuous silhouette: a blunt head, the thickest point near the middle, then a long taper that keeps getting
-  // slimmer toward the tail instead of ending in a stick
-  const rx = 35;
-  const ry = 16;
-  const xe = 98; // where the tail ends and the flukes begin
-  const half = (c: number) => {
-    if (c <= cx) return ry * Math.pow(Math.max(0, 1 - Math.abs((c - cx) / rx) ** 3.2), 1 / 2.2);
-    return Math.max(3, ry * Math.pow(Math.max(0, 1 - (c - cx) / (xe - cx)), 1.5));
-  };
-  for (const side of [-1, 1]) lobe(set, xe, cy, 0.3, side * 0.95, 27 * fluke, 5.6); // flukes at right angles to the tail
-  for (let c = 0; c <= xe; c++) {
-    const hh = half(c);
-    const dx = (c - cx) / rx;
-    for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {
-      const fr = (r - cy) / Math.max(hh, 1);
-      const dyo = (r - cy) / ry;
+  const [top, x0, headEnd, xe, hmax, rc] = [28, 3, 44, 108, 36, 8];
+  // thickness: full height through the head, then a long taper that keeps narrowing toward the tail. The back stays flat.
+  const thick = (x: number) => (x <= headEnd ? hmax : 4 + (hmax - 4) * Math.pow(1 - (x - headEnd) / (xe - headEnd), 1.35));
+  for (const side of [-1, 1]) lobe(set, xe, top + thick(xe) / 2, 0.3, side * 0.95, (side < 0 ? 26 : 19) * fluke, side < 0 ? 6 : 5);
+  for (let x = x0; x <= xe; x++) {
+    let t = top;
+    let b = top + thick(x);
+    const dxf = x - x0;
+    if (dxf < rc) {
+      const k = rc - Math.sqrt(Math.max(0, rc * rc - (rc - dxf) ** 2)); // rounded corners on the head's front
+      t += k;
+      b -= k;
+    }
+    for (let y = Math.round(t); y <= Math.round(b); y++) {
+      const fr = (y - t) / Math.max(1, b - t); // 0 at the back, 1 at the belly
       let v = "G";
-      if (fr < -0.45) v = "h";
-      else if (dx * 0.9 + dyo * 0.6 > 0.62 || (c > cx + 10 && fr > 0.3)) v = "d"; // shaded rear flank and underside of the tail
-      const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 56) * 0.8; // jagged pale belly: long, rising into the flank only far back
-      if (r > throat) v = (c * 7 + r * 3) % 11 === 0 ? "w" : "W";
-      else if (r > throat - 2 && r <= throat && c < 78) v = "d"; // dark seam above the throat
-      put(c, r, v);
+      if (fr < 0.16) v = "h"; // light along the flat back
+      else if (x > 66 && fr > 0.55) v = "d"; // darker underside of the tail
+      const edge = 0.64 + Math.sin(x * 0.9) * 0.05;
+      if (x < 98 && fr > edge) v = (x * 7 + y * 3) % 11 === 0 ? "w" : "W"; // long pale belly with a jagged edge
+      else if (x < 98 && fr > edge - 0.07) v = "d"; // dark seam above it
+      put(x, y, v);
     }
   }
-  [[13, 27], [14, 27], [13, 28], [14, 28], [13, 29], [14, 29]].forEach(([c, r]) => put(c!, r!, "E")); // eye
-  [[15, 27], [15, 28], [15, 29]].forEach(([c, r]) => put(c!, r!, "e"));
-  for (let i = 0; i < 12; i++) {
-    const x = 38 + Math.round(i * 0.8);
-    const y = cy + 12 + i;
-    const w = Math.max(2, 5 - Math.floor(i / 3));
-    for (let k = 0; k < w; k++) put(x + k, y, k === w - 1 ? "h" : "G"); // short flipper, light along its lower edge
+  for (let x = x0 + 3; x <= 40; x++) set(x, top + 28 + x * 0.03, "d"); // the long, narrow mouth under the head
+  [[14, top + 14], [15, top + 14], [14, top + 15], [15, top + 15]].forEach(([x, y]) => set(x!, y!, "E")); // small eye
+  // a short flipper: a tapered, rounded paddle that hangs from the belly and angles back
+  for (let k = 0; k <= 17; k++) {
+    const cx = 26 + k * 0.55;
+    const half = 1 + 4.2 * (1 - Math.pow(k / 17, 2.4));
+    for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) set(x, top + hmax - 3 + k, x <= cx - half + 1 ? "h" : x >= cx + half - 1 ? "d" : "G");
   }
-  return { g, cy };
+  return { g, cy: top + thick(xe) / 2 };
 }
 
-/** The whale swims: its whole rear half bends with the tail like a lever (tip up, level, tip down). */
+/** The whale swims: everything behind the head bends with the tail like a lever (tip up, level, tip down). */
 function whale(betaDeg: number): string[] {
   const { g, cy } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
-  return bend(g, cy, 30, 72, betaDeg, 128, 100, 56);
+  return bend(g, cy, 44, 72, betaDeg, 140, 132, 76);
 }
 
 function octopus(f: number): string[] {

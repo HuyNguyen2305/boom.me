@@ -10,7 +10,7 @@ import type { World } from "./world";
 
 type Bubble = { x: number; y: number; life: number };
 
-const PX = 6; // one sprite pixel = 6 css pixels (72 x 42 fish)
+const PX = 3; // one sprite pixel = 3 css pixels (72 x 42 fish)
 const LANE = 170; // width of the fish's lane at the right edge
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {

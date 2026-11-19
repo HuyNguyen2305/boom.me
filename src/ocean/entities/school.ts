@@ -1,7 +1,7 @@
 import type { World } from "../world";
 import { drawSprite } from "./pixels";
 
-const SMALL = ["..SS", "SSSS", "..SS"];
+const SMALL = ["..SSSS..S", ".SSSSSSSSS", "..SSSS..S"];
 export type Fish = { x: number; y: number; speed: number; dir: 1 | -1 };
 
 const COUNT = 9;
@@ -36,11 +36,11 @@ export function drawSchool(ctx: CanvasRenderingContext2D, w: World, school: Fish
     const x = (((f.x % span) + span) % span) - 20;
     ctx.save();
     if (f.dir < 0) {
-      ctx.translate(x + 16, 0);
+      ctx.translate(x + 27, 0);
       ctx.scale(-1, 1);
       ctx.translate(-x, 0);
     }
-    drawSprite(ctx, SMALL, { S: color }, x, f.y * w.h, 4);
+    drawSprite(ctx, SMALL, { S: color }, x, f.y * w.h, 3);
     ctx.restore();
   }
   ctx.restore();

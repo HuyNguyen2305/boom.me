@@ -19,6 +19,13 @@ export function readSurface(): number {
   return sky ? sky.getBoundingClientRect().bottom + scrollY : 0;
 }
 
+/** Right edges (screen x) of the shore's flat top and of the billboard. */
+export function readShore(): { end: number; billboardRight: number } {
+  const shore = document.querySelector("[data-shore]")?.getBoundingClientRect();
+  const board = document.querySelector("[data-billboard]")?.getBoundingClientRect();
+  return { end: shore ? shore.left + shore.width * 0.91 : 0, billboardRight: board?.right ?? 0 };
+}
+
 /** Document y of the bottom of the last stop (the sea floor). */
 export function readFloor(): number {
   const last = stopEls().at(-1);

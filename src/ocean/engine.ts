@@ -1,10 +1,12 @@
-import { drawBoat } from "./entities/boat";
+import { drawBoat, WIDE } from "./entities/boat";
+import { drawBuoy } from "./entities/buoy";
 import { drawSeafloor } from "./entities/seafloor";
 import { createSchool, drawSchool } from "./entities/school";
+import { drawShore } from "./entities/shore";
 import { drawSky } from "./entities/sky";
 import { depthBus } from "./events";
 import { createInput } from "./input";
-import { depthAt, readFloor, readStops, readSurface, type Stop } from "./scroll";
+import { depthAt, readFloor, readShore, readStops, readSurface, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
 import type { World } from "./world";
 
@@ -25,7 +27,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
   let swimX = 0; // distance swum left from the home lane
   let raf = 0;
   const world: World = {
-    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, depth: 0,
+    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, shoreEnd: 0, billboardRight: 0, depth: 0,
     moving: 0, reduced: opts.reducedMotion, fishX: 0, fishY: 0, facing: 1,
   };
 
@@ -33,6 +35,9 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     stops = readStops();
     world.surfaceY = readSurface();
     world.floorY = readFloor();
+    const shore = readShore();
+    world.shoreEnd = shore.end;
+    world.billboardRight = shore.billboardRight;
   }
 
   function resize() {
@@ -77,12 +82,14 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
 
     ctx.clearRect(0, 0, world.w, world.h);
     drawSky(ctx, world);
+    drawShore(ctx, world);
     drawSchool(ctx, world, school);
+    if (world.w >= WIDE) drawBuoy(ctx, world, world.w - 85);
     drawBoat(ctx, world);
     drawSeafloor(ctx, world);
 
     if (!opts.reducedMotion) {
-      if (Math.random() < 0.02 + world.moving * 0.08) bubbles.push({ x: world.fishX - world.facing * 30, y: world.fishY, life: 1 });
+      if (Math.random() < 0.02 + world.moving * 0.08) bubbles.push({ x: world.fishX - (world.facing * FISH_W * PX) / 2, y: world.fishY, life: 1 });
       for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i]!;
         b.y -= 0.8;

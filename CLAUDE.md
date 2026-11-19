@@ -55,7 +55,7 @@ src/
     Ocean.tsx             # mounts canvas, starts/stops engine
     engine.ts             # createEngine(canvas, opts): rAF loop, resize, pause on hidden tab
     world.ts              # world state: fish, schools, bubbles, boat, depth
-    entities/             # fish, school, boat, bubbles, seafloor
+    entities/             # sky, shore (palms), boat, buoy, school, seafloor
     input.ts              # arrow-key steering; off while typing or a dialog is open
     scroll.ts             # reads [data-dive-stop] rects, maps scroll to fish target
     sprites.ts            # sheet loading, frame lookup, nearest-neighbor drawing

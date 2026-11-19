@@ -9,6 +9,7 @@ Current state of the portfolio build. Update at the end of every session.
 - [x] Ocean v1: canvas fish (tilt, bubbles), scroll-to-depth, Hud depth meter, reduced-motion still frame
 - [x] Ocean v3: bright sky scene (sun, clouds, island+palm, hatted fisherman), lower waterline, water darkens by depth, fish starts right, arrow-key control (no buttons), E opens project dialog (placeholder projects)
 - [x] Hero moved to the sky: shore + billboard (On Surface, Gia Huy, Software Engineer, controls); old underwater hero removed; depth meter follows the fish
+- [x] Pixel art restyled (outlined round fish, flat-shaded palms); short left shore with palms, boat centred, red/white buoy above the fish lane; content widened with a right lane for the fish
 - [x] pnpm build, typecheck and test all pass
 
 ## In progress

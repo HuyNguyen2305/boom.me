@@ -27,6 +27,7 @@ const COLORS = {
   G: "#7fbf7a", g: "#5a9a57", l: "#b07a45", W: "#8a5a33", D: "#6e4526", d: "#4e3019",
 };
 const PX = 3;
+export const WIDE = 900;
 
 /** Fisherman in a wooden boat on the water line, plus the wave line itself. */
 export function drawBoat(ctx: CanvasRenderingContext2D, w: World) {
@@ -35,9 +36,9 @@ export function drawBoat(ctx: CanvasRenderingContext2D, w: World) {
   const t = w.reduced ? 0 : w.t;
   const bob = Math.sin(t / 900) * 2;
 
-  if (w.w >= 640) {
-    // on phones the shore and billboard take the whole width
-    const bx = w.w * 0.64;
+  if (w.w >= WIDE) {
+    // narrower screens give the whole sky to the shore and billboard
+    const bx = Math.max(w.w / 2 - 18 * PX, w.shoreEnd + 40);
     const by = sy - 17 * PX + bob + 4; // hull sits low in the water
     drawSprite(ctx, BOAT, COLORS, bx, by, PX);
 

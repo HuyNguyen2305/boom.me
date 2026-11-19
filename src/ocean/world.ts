@@ -5,6 +5,8 @@ export type World = {
   scrollY: number;
   surfaceY: number; // document y of the water surface
   floorY: number; // document y of the sea floor
+  shoreEnd: number; // screen x where the shore's flat top ends
+  billboardRight: number; // screen x of the billboard's right edge
   depth: number; // metres
   moving: number; // 0..1 scroll speed
   reduced: boolean;

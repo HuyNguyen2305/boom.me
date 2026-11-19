@@ -6,7 +6,7 @@ import { Section } from "./Section";
 export function Projects() {
   return (
     <Section id="projects" depth="−120 m" title="Projects" band="bg-depth-2" className="ripple-lines">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {projects.length === 0 ? (
           <EmptyState count={3} />
         ) : (
@@ -14,7 +14,7 @@ export function Projects() {
             <article
               key={p.title}
               data-project={i}
-              className={`flex flex-col gap-3 border border-teal/20 bg-reef/80 p-4 backdrop-blur-sm hover:border-teal/50 motion-safe:transition motion-safe:duration-200 motion-safe:hover:-translate-y-0.5 ${i === 0 ? "sm:col-span-2" : ""}`}
+              className={`flex flex-col gap-3 border border-teal/20 bg-reef/80 p-4 backdrop-blur-sm hover:border-teal/50 motion-safe:transition motion-safe:duration-200 motion-safe:hover:-translate-y-0.5`}
             >
               {p.image && (
                 // eslint-disable-next-line @next/next/no-img-element

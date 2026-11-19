@@ -29,48 +29,13 @@ function drawSun(ctx: CanvasRenderingContext2D, cx: number, cy: number, px: numb
   }
 }
 
-/** Island with a coconut palm, sitting on the water line at x. */
-function drawIsland(ctx: CanvasRenderingContext2D, x: number, sy: number) {
-  const px = 3;
-  // sand mound: stacked rows, widest at the water, with a darker speckle pattern
-  const widths = [56, 50, 44, 38, 30, 22, 14];
-  widths.forEach((cells, r) => {
-    const y = sy - (r + 1) * px + 3;
-    for (let c = 0; c < cells; c++) {
-      ctx.fillStyle = (c + r * 3) % 7 === 0 ? "#c9a566" : r > 3 ? "#d9b873" : "#e8c98a";
-      ctx.fillRect(x - (cells * px) / 2 + c * px, y, px, px);
-    }
-  });
-  // trunk: curves to the right as it climbs
-  const base = sy - widths.length * px + 3;
-  const height = 24;
-  let tx = x - 2 * px;
-  for (let i = 0; i < height; i++) {
-    tx = x - 2 * px + Math.round(Math.sin((i / height) * 1.4) * 7) * px;
-    ctx.fillStyle = i % 3 === 0 ? "#6e4526" : "#8a5a33";
-    ctx.fillRect(tx, base - (i + 1) * px, 2 * px, px);
-  }
-  const top = base - height * px;
-  // fronds radiate and droop; two greens plus a light tip
-  const fronds: [number, number][] = [[-1, 0.6], [-1, 0.1], [-0.6, -0.6], [0, -0.8], [0.6, -0.6], [1, 0.1], [1, 0.6]];
-  fronds.forEach(([vx, vy], f) => {
-    for (let k = 1; k <= 16; k++) {
-      const d = k * 0.75; // step in cells, so fronds read as solid leaves
-      ctx.fillStyle = k === 16 ? "#8fe08f" : (k + f) % 2 ? "#2f8f4e" : "#46a85a";
-      ctx.fillRect(tx + vx * d * px * 1.2, top + vy * d * px + d * d * 0.12 * px, px * 1.5, px * 1.5);
-    }
-  });
-  ctx.fillStyle = "#5b3a1e";
-  [[-2, 1], [0, 2], [2, 1]].forEach(([dx, dy]) => ctx.fillRect(tx + dx! * px, top + dy! * px, 2 * px, 2 * px));
-}
-
-/** Everything above the water: sun, drifting clouds, island with coconut palm. */
+/** Everything above the water: sun and drifting clouds. */
 export function drawSky(ctx: CanvasRenderingContext2D, w: World) {
   const sy = w.surfaceY - w.scrollY;
   if (sy < -20) return;
   const t = w.reduced ? 0 : w.t;
 
-  drawSun(ctx, w.w * 0.74, sy - w.surfaceY * 0.7, 4);
+  drawSun(ctx, w.w * 0.68, sy - w.surfaceY * 0.7, 4);
 
   for (const c of CLOUDS) {
     const span = w.w + 240;
@@ -80,5 +45,4 @@ export function drawSky(ctx: CanvasRenderingContext2D, w: World) {
     ctx.globalAlpha = 1;
   }
 
-  if (w.w >= 640) drawIsland(ctx, w.w * 0.9, sy);
 }

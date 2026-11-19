@@ -7,7 +7,8 @@ const stopEls = () => [...document.querySelectorAll<HTMLElement>("[data-dive-sto
 
 export function readStops(): Stop[] {
   return stopEls().map((el) => ({
-    top: el.getBoundingClientRect().top + scrollY,
+    // the sky hero is 0 m at its bottom edge, where the water starts
+    top: (el.hasAttribute("data-surface") ? el.getBoundingClientRect().bottom : el.getBoundingClientRect().top) + scrollY,
     depth: parseDepth(el.dataset.depth ?? "0"),
   }));
 }

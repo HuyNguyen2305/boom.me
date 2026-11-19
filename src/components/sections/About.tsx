@@ -4,7 +4,7 @@ import { Section } from "./Section";
 
 export function About() {
   return (
-    <Section id="about" depth="−10 m" title="About" band="bg-depth-1">
+    <Section id="about" depth="−10 m" title="About" band="bg-depth-0">
       <div className="grid gap-6 sm:grid-cols-[minmax(0,16rem)_1fr]">
         <div
           aria-hidden

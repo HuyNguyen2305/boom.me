@@ -21,8 +21,6 @@ export default function Page() {
       <Hud />
       <ProjectViewer projects={projects} />
       <main id="main">
-        {/* bright sky; the engine draws the sun, clouds, island and boat on it and reads the surface line from here */}
-        <div aria-hidden data-surface className="h-[300px] bg-gradient-to-b from-sky-top to-sky-bottom sm:h-[380px]" />
         <Hero />
         <About />
         <Skills />

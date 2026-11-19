@@ -5,7 +5,7 @@ import { Section } from "./Section";
 
 export function Projects() {
   return (
-    <Section id="projects" depth="−120 m" title="Projects" band="bg-depth-3" className="ripple-lines">
+    <Section id="projects" depth="−120 m" title="Projects" band="bg-depth-2" className="ripple-lines">
       <div className="grid gap-4 sm:grid-cols-2">
         {projects.length === 0 ? (
           <EmptyState count={3} />

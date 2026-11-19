@@ -37,24 +37,8 @@ body { @apply bg-abyss text-foam font-sans antialiased; }
 
 :focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
 
-.dot-grid {
-  background-image: radial-gradient(rgb(60 198 192 / 0.18) 1px, transparent 1.3px);
-  background-size: 16px 16px;
-}
 .ripple-lines {
   background-image: repeating-linear-gradient(0deg, rgb(60 198 192 / 0.06) 0 1px, transparent 1px 8px);
-}
-@keyframes drift {
-  from { transform: translate(-3%, -2%) rotate(-2deg); }
-  to { transform: translate(3%, 2%) rotate(2deg); }
-}
-.hero-light {
-  background:
-    radial-gradient(40% 50% at 25% 30%, rgb(60 198 192 / 0.18), transparent),
-    radial-gradient(35% 45% at 75% 60%, rgb(60 198 192 / 0.12), transparent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .hero-light { animation: drift 14s ease-in-out infinite alternate; }
 }
 
 /* Project dialog: scale 0.96 + fade in 220ms, out 160ms; no motion for reduced-motion visitors */

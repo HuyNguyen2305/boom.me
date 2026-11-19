@@ -35,25 +35,28 @@ export function drawBoat(ctx: CanvasRenderingContext2D, w: World) {
   const t = w.reduced ? 0 : w.t;
   const bob = Math.sin(t / 900) * 2;
 
-  const bx = w.w * 0.34;
-  const by = sy - 17 * PX + bob + 4; // hull sits low in the water
-  drawSprite(ctx, BOAT, COLORS, bx, by, PX);
+  if (w.w >= 640) {
+    // on phones the shore and billboard take the whole width
+    const bx = w.w * 0.64;
+    const by = sy - 17 * PX + bob + 4; // hull sits low in the water
+    drawSprite(ctx, BOAT, COLORS, bx, by, PX);
 
-  // rod from the hand, line dropping into the water
-  const hx = bx + 24 * PX;
-  const hy = by + 11.5 * PX;
-  ctx.strokeStyle = "#6e4526";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(hx + 14 * PX, hy - 9 * PX);
-  ctx.stroke();
-  ctx.strokeStyle = "rgb(255 255 255 / .7)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(hx + 14 * PX, hy - 9 * PX);
-  ctx.lineTo(hx + 14 * PX, sy + 70 + bob);
-  ctx.stroke();
+    // rod from the hand, line dropping into the water
+    const hx = bx + 24 * PX;
+    const hy = by + 11.5 * PX;
+    ctx.strokeStyle = "#6e4526";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(hx, hy);
+    ctx.lineTo(hx + 14 * PX, hy - 9 * PX);
+    ctx.stroke();
+    ctx.strokeStyle = "rgb(255 255 255 / .7)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(hx + 14 * PX, hy - 9 * PX);
+    ctx.lineTo(hx + 14 * PX, sy + 70 + bob);
+    ctx.stroke();
+  }
 
   // wave line, drawn last so it overlaps the hull and island
   ctx.strokeStyle = "#9fe6e2";

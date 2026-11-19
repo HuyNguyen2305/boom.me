@@ -20,10 +20,12 @@ test("reduced motion still renders a still frame", async ({ page }) => {
   await expect(page.locator("canvas")).toBeAttached();
 });
 
-test("hero describes the controls and has no action buttons", async ({ page }) => {
+test("billboard on the shore holds the hero and the controls", async ({ page }) => {
   test.skip(desktopOnly(page.viewportSize()?.width), "controls are for keyboards");
   await page.goto("/");
   await expect(page.getByText("On Surface")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Software Engineer");
+  await expect(page.getByText("Gia Huy", { exact: true })).toBeVisible();
   await expect(page.getByRole("list", { name: "How to control the fish" })).toBeVisible();
   await expect(page.getByRole("link", { name: /start the dive/i })).toHaveCount(0);
 });

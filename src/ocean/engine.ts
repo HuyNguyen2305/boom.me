@@ -53,8 +53,6 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     world.t = t;
     world.scrollY = scrollY;
     world.moving = Math.min(Math.abs(vy) / 20, 1);
-    world.depth = Math.round(depthAt(stops, scrollY + world.h / 2));
-    depthBus.set(world.depth);
 
     if (input) {
       if (input.held("up")) scrollBy({ top: -14, behavior: "instant" });
@@ -73,6 +71,9 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     // below the waterline at the top of the page, then held at 42% of the screen
     const base = narrow ? world.h - 70 : world.h * 0.42;
     world.fishY = Math.max(base, surfaceScreen + 70) + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
+
+    world.depth = Math.round(depthAt(stops, scrollY + world.fishY)); // the fish's own depth
+    depthBus.set(world.depth);
 
     ctx.clearRect(0, 0, world.w, world.h);
     drawSky(ctx, world);

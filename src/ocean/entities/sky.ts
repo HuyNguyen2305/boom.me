@@ -70,7 +70,7 @@ export function drawSky(ctx: CanvasRenderingContext2D, w: World) {
   if (sy < -20) return;
   const t = w.reduced ? 0 : w.t;
 
-  drawSun(ctx, w.w * 0.82, sy - w.surfaceY * 0.7, 4);
+  drawSun(ctx, w.w * 0.74, sy - w.surfaceY * 0.7, 4);
 
   for (const c of CLOUDS) {
     const span = w.w + 240;
@@ -80,5 +80,5 @@ export function drawSky(ctx: CanvasRenderingContext2D, w: World) {
     ctx.globalAlpha = 1;
   }
 
-  drawIsland(ctx, Math.max(110, w.w * 0.1), sy);
+  if (w.w >= 640) drawIsland(ctx, w.w * 0.9, sy);
 }

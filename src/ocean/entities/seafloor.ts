@@ -2,7 +2,7 @@ import type { World } from "../world";
 
 /** Sand strip at the bottom of the last section, with swaying kelp. */
 export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
-  const fy = w.floorY - w.scrollY;
+  const fy = Math.round(w.floorY - w.scrollY);
   if (fy > w.h + 60 || fy < -60) return;
   ctx.fillStyle = "#c98b55";
   ctx.fillRect(0, fy - 24, w.w, 24);
@@ -12,7 +12,7 @@ export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
   for (let x = 40; x < w.w; x += 110) {
     for (let i = 0; i < 10; i++) {
       const sway = w.reduced ? 0 : Math.sin(w.t / 700 + x + i * 0.6) * i * 0.7;
-      ctx.fillRect(x + sway, fy - 24 - (i + 1) * 5, 4, 5);
+      ctx.fillRect(Math.round(x + sway), fy - 24 - (i + 1) * 5, 4, 6); // 6 tall on a 5 step: segments overlap, no seams
     }
   }
 }

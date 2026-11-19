@@ -17,6 +17,8 @@
   --color-sky-top: #4aa9e8;
   --color-sky-bottom: #bfe6fb;
 
+  --container-site: 84rem; /* content column cap; the engine reads it to place the fish lane */
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   --font-display: var(--font-manrope), system-ui, sans-serif;

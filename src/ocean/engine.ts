@@ -6,14 +6,13 @@ import { drawShore } from "./entities/shore";
 import { drawSky } from "./entities/sky";
 import { depthBus } from "./events";
 import { createInput } from "./input";
-import { depthAt, readFloor, readShore, readStops, readSurface, type Stop } from "./scroll";
+import { depthAt, readFloor, readLane, readShore, readStops, readSurface, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
 import type { World } from "./world";
 
 type Bubble = { x: number; y: number; life: number };
 
 const PX = 3; // one sprite pixel = 3 css pixels (72 x 42 fish)
-const LANE = 170; // width of the fish's lane at the right edge
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
   const ctx = canvas.getContext("2d")!;
@@ -27,7 +26,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
   let swimX = 0; // distance swum left from the home lane
   let raf = 0;
   const world: World = {
-    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, shoreEnd: 0, billboardRight: 0, depth: 0,
+    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, shoreEnd: 0, shoreRight: 0, billboardLeft: 0, billboardRight: 0, laneX: 0, depth: 0,
     moving: 0, reduced: opts.reducedMotion, fishX: 0, fishY: 0, facing: 1,
   };
 
@@ -37,7 +36,10 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     world.floorY = readFloor();
     const shore = readShore();
     world.shoreEnd = shore.end;
+    world.shoreRight = shore.right;
+    world.billboardLeft = shore.billboardLeft;
     world.billboardRight = shore.billboardRight;
+    world.laneX = readLane();
   }
 
   function resize() {
@@ -64,7 +66,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
       if (input.held("down")) scrollBy({ top: 14, behavior: "instant" });
       const dx = (input.held("right") ? 1 : 0) - (input.held("left") ? 1 : 0);
       if (dx) world.facing = dx > 0 ? -1 : 1; // sprite head points left
-      swimX = Math.max(0, Math.min(world.w - LANE, swimX - dx * 5));
+      swimX = Math.max(0, Math.min(world.laneX - 60, swimX - dx * 5));
     }
 
     const target = opts.reducedMotion ? 0 : Math.max(-1, Math.min(1, vy / 20)) * 32; // head-down when diving
@@ -72,7 +74,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
 
     const narrow = world.w < 640;
     const surfaceScreen = world.surfaceY - scrollY;
-    world.fishX = narrow ? world.w - 50 : world.w - 85 - swimX;
+    world.fishX = narrow ? world.w - 50 : world.laneX - swimX;
     // below the waterline at the top of the page, then held at 42% of the screen
     const base = narrow ? world.h - 70 : world.h * 0.42;
     world.fishY = Math.max(base, surfaceScreen + 70) + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
@@ -84,7 +86,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     drawSky(ctx, world);
     drawShore(ctx, world);
     drawSchool(ctx, world, school);
-    if (world.w >= WIDE) drawBuoy(ctx, world, world.w - 85);
+    if (world.w >= WIDE) drawBuoy(ctx, world, world.laneX);
     drawBoat(ctx, world);
     drawSeafloor(ctx, world);
 

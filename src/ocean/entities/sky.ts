@@ -16,18 +16,18 @@ const CLOUDS = [
   { y: 0.2, speed: 0.008, offset: 0.85, px: 5 },
 ];
 
-/** Pixel sun: shaded disc with eight rays. */
-function drawSun(ctx: CanvasRenderingContext2D, cx: number, cy: number, px: number) {
-  for (let dy = -13; dy <= 13; dy++) {
-    for (let dx = -13; dx <= 13; dx++) {
-      const d2 = dx * dx + dy * dy;
-      const ray = (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && d2 >= 100 && d2 <= 190;
-      if (d2 > 64 && !ray) continue;
-      ctx.fillStyle = ray ? "#ffd84d" : d2 <= 20 ? "#fff0a0" : d2 <= 52 ? "#ffd84d" : "#f5b82e";
-      ctx.fillRect(cx + dx * px, cy + dy * px, px, px);
-    }
-  }
-}
+/** Pixel sun: shaded disc with eight rays, built once as string art. */
+const SUN = Array.from({ length: 27 }, (_, i) => {
+  const dy = i - 13;
+  return Array.from({ length: 27 }, (_, j) => {
+    const dx = j - 13;
+    const d2 = dx * dx + dy * dy;
+    const ray = (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && d2 >= 100 && d2 <= 190;
+    if (ray) return "Y";
+    return d2 > 64 ? "." : d2 <= 20 ? "c" : d2 <= 52 ? "Y" : "o";
+  }).join("");
+});
+const SUN_COLORS = { Y: "#ffd84d", c: "#fff0a0", o: "#f5b82e" };
 
 /** Everything above the water: sun and drifting clouds. */
 export function drawSky(ctx: CanvasRenderingContext2D, w: World) {
@@ -35,7 +35,7 @@ export function drawSky(ctx: CanvasRenderingContext2D, w: World) {
   if (sy < -20) return;
   const t = w.reduced ? 0 : w.t;
 
-  drawSun(ctx, w.w * 0.68, sy - w.surfaceY * 0.7, 4);
+  drawSprite(ctx, SUN, SUN_COLORS, w.w * 0.68 - 13 * 4, sy - w.surfaceY * 0.7 - 13 * 4, 4);
 
   for (const c of CLOUDS) {
     const span = w.w + 240;

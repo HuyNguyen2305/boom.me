@@ -19,11 +19,23 @@ export function readSurface(): number {
   return sky ? sky.getBoundingClientRect().bottom + scrollY : 0;
 }
 
-/** Right edges (screen x) of the shore's flat top and of the billboard. */
-export function readShore(): { end: number; billboardRight: number } {
+/** Screen x of the fish lane: inside the right edge of the capped content column. */
+export function readLane(): number {
+  const root = getComputedStyle(document.documentElement);
+  const max = parseFloat(root.getPropertyValue("--container-site")) * parseFloat(root.fontSize) || innerWidth;
+  return (innerWidth + Math.min(innerWidth, max)) / 2 - 85;
+}
+
+/** Screen x extents of the shore and the billboard standing on it. */
+export function readShore() {
   const shore = document.querySelector("[data-shore]")?.getBoundingClientRect();
   const board = document.querySelector("[data-billboard]")?.getBoundingClientRect();
-  return { end: shore ? shore.left + shore.width * 0.91 : 0, billboardRight: board?.right ?? 0 };
+  return {
+    end: shore ? shore.left + shore.width * 0.91 : 0, // where the flat top ends
+    right: shore?.right ?? 0,
+    billboardLeft: board?.left ?? 0,
+    billboardRight: board?.right ?? 0,
+  };
 }
 
 /** Document y of the bottom of the last stop (the sea floor). */

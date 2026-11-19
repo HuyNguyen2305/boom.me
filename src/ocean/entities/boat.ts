@@ -38,7 +38,7 @@ export function drawBoat(ctx: CanvasRenderingContext2D, w: World) {
 
   if (w.w >= WIDE) {
     // narrower screens give the whole sky to the shore and billboard
-    const bx = Math.max(w.w / 2 - 18 * PX, w.shoreEnd + 40);
+    const bx = Math.max(w.w / 2 - 18 * PX, w.shoreRight + 30);
     const by = sy - 17 * PX + bob + 4; // hull sits low in the water
     drawSprite(ctx, BOAT, COLORS, bx, by, PX);
 

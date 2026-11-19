@@ -25,6 +25,13 @@ Use the `ponytail` skills for every code check: `/ponytail-review` for a change,
 `/ponytail-audit` for dead-code and dead-file checks. Write the smallest change that
 fully works. Report findings; confirm before deleting files.
 
+## Design (always)
+
+Every design task (layout, sprites, motion, copy on the page) uses all five skills, loaded
+fresh each time: `emil-design-eng` (motion and polish), `design-taste-frontend`,
+`impeccable`, `stageshow` and `ui-ux-pro-max:ui-ux-pro-max`. Then check the result in a real
+browser before reporting.
+
 ## Memory (Obsidian vault + graphify)
 
 Session start: read `vault/memory.md` and `vault/progress.md`, then query graphify.

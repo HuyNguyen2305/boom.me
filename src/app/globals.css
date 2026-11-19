@@ -24,7 +24,7 @@
 }
 
 /* one wide centred column */
-.column { margin-inline: auto; max-width: 80rem; padding-inline: 1rem; }
+.column { position: relative; z-index: 20; margin-inline: auto; max-width: 80rem; padding-inline: 1rem; }
 @media (min-width: 40rem) { .column { padding-inline: 1.5rem; } }
 
 html {
@@ -94,11 +94,11 @@ dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
   /* full viewport width: pull back to the viewport's left edge, mirroring .column's left edge */
   --col-left: 1rem;
   width: 100vw; margin-left: calc(-1 * var(--col-left));
-  position: relative; z-index: 5; /* below the ocean canvas (z-10) so the fish swim in front of the boxes */
+  position: relative; 
 }
 .skills-fade {
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
 }
 @media (min-width: 40rem) { .skills-bleed { --col-left: 1.5rem; } }
 @media (min-width: 80rem) { .skills-bleed { --col-left: calc(max(0rem, (100vw - 80rem) / 2) + 1.5rem); } }

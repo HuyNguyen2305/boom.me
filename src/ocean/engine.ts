@@ -17,8 +17,10 @@ const EDGE = 60; // the fish may swim anywhere between these margins sideways
 const LIMIT_TOP = 0.3; // vertical limits (fractions of the screen): at either one the page scrolls instead
 const LIMIT_BOTTOM = 0.66;
 
-export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
-  const ctx = canvas.getContext("2d")!;
+// back: the water, sea life and floor (behind the page text). front: the main fish, its bubbles and the hint (over everything).
+export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
+  const ctx = back.getContext("2d")!;
+  const fctx = front.getContext("2d")!;
   // reduced motion: leave the arrow keys to the browser's own scrolling
   const input = opts.reducedMotion ? null : createInput();
   const school = createSchool();
@@ -51,10 +53,12 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     const dpr = devicePixelRatio || 1;
     world.w = innerWidth;
     world.h = innerHeight;
-    canvas.width = world.w * dpr;
-    canvas.height = world.h * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
+    for (const [c, x] of [[back, ctx], [front, fctx]] as const) {
+      c.width = world.w * dpr;
+      c.height = world.h * dpr;
+      x.setTransform(dpr, 0, 0, dpr, 0, 0);
+      x.imageSmoothingEnabled = false;
+    }
     measure();
     frame(0);
   }
@@ -117,6 +121,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     drawSurface(ctx, world);
     drawSeafloor(ctx, world);
 
+    fctx.clearRect(0, 0, world.w, world.h);
     if (!opts.reducedMotion) {
       if (Math.random() < 0.02 + world.moving * 0.08) bubbles.push({ x: world.fishX - (world.facing * FISH_W * PX) / 2, y: world.fishY, life: 1 });
       for (let i = bubbles.length - 1; i >= 0; i--) {
@@ -125,22 +130,22 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
         b.life -= 0.012;
         if (b.life <= 0) bubbles.splice(i, 1);
         else {
-          ctx.strokeStyle = `rgb(143 179 182 / ${b.life})`;
-          ctx.strokeRect(b.x, b.y, 4, 4);
+          fctx.strokeStyle = `rgb(143 179 182 / ${b.life})`;
+          fctx.strokeRect(b.x, b.y, 4, 4);
         }
       }
     }
 
-    ctx.save();
-    ctx.translate(world.fishX, world.fishY);
-    ctx.scale(world.facing, 1);
-    ctx.rotate((-tilt * Math.PI) / 180); // head-down when diving (the sprite's head is on its left)
-    ctx.scale(PX, PX);
-    ctx.translate(-FISH_W / 2, -FISH_H / 2);
-    drawFish(ctx, opts.reducedMotion ? 0 : t, world.moving > 0.2);
-    ctx.restore();
+    fctx.save();
+    fctx.translate(world.fishX, world.fishY);
+    fctx.scale(world.facing, 1);
+    fctx.rotate((-tilt * Math.PI) / 180); // head-down when diving (the sprite's head is on its left)
+    fctx.scale(PX, PX);
+    fctx.translate(-FISH_W / 2, -FISH_H / 2);
+    drawFish(fctx, opts.reducedMotion ? 0 : t, world.moving > 0.2);
+    fctx.restore();
 
-    drawHint(ctx, world, hint);
+    drawHint(fctx, world, hint);
   }
 
   function loop(t: number) {

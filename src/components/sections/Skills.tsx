@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SkillArrows } from "@/components/ui/SkillArrows";
 import { Section } from "./Section";
 
-const box = "flex h-40 w-32 shrink-0 flex-col items-center justify-center gap-4 border border-teal/30 bg-reef sm:h-52 sm:w-44";
+const box = "flex h-40 w-32 shrink-0 flex-col items-center justify-center gap-4 border border-teal/50 bg-reef sm:h-52 sm:w-44";
 
 export function Skills() {
   return (

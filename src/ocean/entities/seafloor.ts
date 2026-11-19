@@ -1,7 +1,9 @@
 import type { World } from "../world";
 import { drawSprite } from "./pixels";
+import { diverSpan, drawSignDiver } from "./signdiver";
 
 type Pal = Record<string, string>;
+
 const PX = 3;
 const SAND = 44; // depth of the sand strip; the Contact section leaves room above it so corals never cover its buttons
 
@@ -205,8 +207,11 @@ function layout(width: number): Item[] {
     const sw = kind === "kelp" || kind === "grass" ? 18 : KINDS[kind]!.frames[0]![0]!.length * PX;
     const ship = wreck(width);
     // keep the wreck clear: only pebbles, shells and stars may sit in front of it
-    const hidesWreck = ship.show && x + sw > ship.left && x < ship.right && !["rock", "shell", "star"].includes(kind);
-    if (!hidesWreck) items.push({ kind, x });
+    const [dl, dr] = diverSpan(width);
+    const low = ["rock", "shell", "star"].includes(kind);
+    const hidesWreck = ship.show && x + sw > ship.left && x < ship.right && !low;
+    const hidesDiver = x + sw > dl && x < dr && !low; // the diver stands in a clearing
+    if (!hidesWreck && !hidesDiver) items.push({ kind, x });
     x += sw + 6 + seed(i, 2) * 36;
   }
   cache = { w: width, items };
@@ -268,4 +273,5 @@ export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
     const rows = spr.frames[Math.floor(t / 600 + i) % spr.frames.length]!;
     drawSprite(ctx, rows, spr.pal, it.x, ground - rows.length * PX, PX);
   }
+  drawSignDiver(ctx, w, sandTop);
 }

@@ -7,6 +7,8 @@ import { Skills } from "@/components/sections/Skills";
 import { OceanLayer } from "@/components/OceanLayer";
 import { Hud } from "@/components/ui/Hud";
 import { Nav } from "@/components/ui/Nav";
+import { ProjectViewer } from "@/components/ui/ProjectViewer";
+import { projects } from "@/content/site";
 
 export default function Page() {
   return (
@@ -17,9 +19,15 @@ export default function Page() {
       <OceanLayer />
       <Nav />
       <Hud />
+      <ProjectViewer projects={projects} />
       <main id="main">
-        <Hero />
-        <About />
+        {/* 150px sky strip: the engine draws the moon, fisherman and waves here and reads the surface line from it */}
+        {/* sky, hero and About fill the first screen exactly, so the Skills layer never peeks out below */}
+        <div className="flex min-h-[calc(100svh-3.5rem)] flex-col">
+          <div aria-hidden data-surface className="h-[150px] shrink-0 bg-abyss" />
+          <Hero />
+          <About className="flex-1" />
+        </div>
         <Skills />
         <Projects />
         <Contact />

@@ -14,12 +14,19 @@
   --color-depth-3: #06171e;
   --color-depth-4: #041118;
 
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
   --font-display: var(--font-manrope), system-ui, sans-serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   --radius-*: initial;
 }
+
+/* the content column sits 6rem left of centre, toward the fisherman */
+.column { margin-inline: auto; max-width: 64rem; padding-inline: 1rem; }
+@media (min-width: 40rem) { .column { padding-inline: 1.5rem; } }
+@media (min-width: 64rem) { .column { margin-left: max(1rem, calc((100vw - 64rem) / 2 - 6rem)); margin-right: auto; } }
 
 html {
   color-scheme: dark;
@@ -36,9 +43,6 @@ body { @apply bg-abyss text-foam font-sans antialiased; }
   background-image: radial-gradient(rgb(60 198 192 / 0.18) 1px, transparent 1.3px);
   background-size: 16px 16px;
 }
-.ripple-lines {
-  background-image: repeating-linear-gradient(0deg, rgb(60 198 192 / 0.06) 0 1px, transparent 1px 8px);
-}
 @keyframes drift {
   from { transform: translate(-3%, -2%) rotate(-2deg); }
   to { transform: translate(3%, 2%) rotate(2deg); }
@@ -50,4 +54,38 @@ body { @apply bg-abyss text-foam font-sans antialiased; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .hero-light { animation: drift 14s ease-in-out infinite alternate; }
+}
+.ripple-lines {
+  background-image: repeating-linear-gradient(0deg, rgb(60 198 192 / 0.06) 0 1px, transparent 1px 8px);
+}
+
+/* Project dialog: scale 0.96 + fade in 220ms, out 160ms; no motion for reduced-motion visitors */
+dialog.project {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    overlay 160ms allow-discrete,
+    display 160ms allow-discrete;
+}
+dialog.project[open] {
+  opacity: 1;
+  transform: none;
+  transition-duration: 220ms;
+}
+@starting-style {
+  dialog.project[open] { opacity: 0; transform: scale(0.96); }
+}
+dialog.project::backdrop {
+  background: rgb(4 17 24 / 0.72);
+  opacity: 0;
+  transition: opacity 160ms var(--ease-out), overlay 160ms allow-discrete, display 160ms allow-discrete;
+}
+dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
+@starting-style {
+  dialog.project[open]::backdrop { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.project, dialog.project::backdrop { transition: none; transform: none; }
 }

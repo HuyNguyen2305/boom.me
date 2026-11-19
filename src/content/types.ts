@@ -5,6 +5,8 @@ export type Profile = {
   initials: string;
   role: string;
   location: string;
+  /** Short display name used in the hero headline */
+  shortName: string;
   tagline: string;
   intro: string;
   bio: string;
@@ -19,6 +21,9 @@ export type SkillGroup = { name: string; items: string[] };
 export type Project = {
   title: string;
   description: string;
+  /** Longer write-up shown in the project window (press E) */
+  details: string;
+  highlights: string[];
   tech: string[];
   repo?: string;
   live?: string;

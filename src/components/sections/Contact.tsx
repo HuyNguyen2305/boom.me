@@ -8,7 +8,7 @@ const btn = "border-[1.5px] border-teal/50 px-4 py-2.5 text-teal hover:border-te
 
 export function Contact() {
   return (
-    <Section id="contact" depth="−200 m · sea floor" title="Contact" band="bg-depth-4" className="relative pb-40 sm:pb-36">
+    <Section id="contact" depth="−200 m · sea floor" title="Contact" band="bg-depth-4" className="relative pb-44 sm:pb-44">
       <a href={`mailto:${profile.email}`} className="break-all font-display text-3xl font-bold sm:text-5xl">
         {profile.email}
       </a>

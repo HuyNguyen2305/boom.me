@@ -2,7 +2,7 @@ import type { World } from "../world";
 import { drawSprite } from "./pixels";
 
 type Pal = Record<string, string>;
-type Kind = "minnow" | "tang" | "lantern" | "shark" | "whale" | "octopus" | "jelly" | "horde" | "diver";
+type Kind = "minnow" | "tang" | "clown" | "angel" | "puffer" | "bluetang" | "parrot" | "barracuda" | "turtle" | "lantern" | "shark" | "whale" | "octopus" | "jelly" | "horde" | "diver";
 export type Band = { top: number; bottom: number; depth: number };
 
 // ---- sprites (all face left; 3px pixels) ----
@@ -26,6 +26,46 @@ function outline(g: string[][], v = "O") {
   );
   edge.forEach(([c, r]) => (g[r]![c] = v));
 }
+
+/**
+ * A generic side-view fish (faces left): an ellipse body of length L and height H, a widening forked tail, an optional
+ * dorsal and belly fin, and an eye. `paint(col, y01)` picks each body cell's colour letter (y01: 0 at the back, 1 at the belly).
+ */
+function fishShape(o: { L: number; H: number; tail: number; dorsal?: number; belly?: number; eye?: number; paint: (c: number, y01: number, r: number) => string }): string[] {
+  const { L, H, tail, dorsal = 0, belly = 0 } = o;
+  const W = L + tail;
+  const cy = dorsal + H / 2;
+  const g = grid(W, Math.ceil(dorsal + H + belly) + 1);
+  const set = setter(g);
+  const cx = L / 2;
+  for (let c = 0; c < L; c++) {
+    const half = (H / 2) * Math.sqrt(Math.max(0, 1 - ((c + 0.5 - cx) / (cx + 0.2)) ** 2));
+    for (let r = Math.round(cy - half); r < Math.round(cy + half); r++) set(c, r, o.paint(c, (r - (cy - half)) / Math.max(1, 2 * half), r));
+  }
+  for (let k = 0; k < tail; k++) {
+    const half = 0.8 + ((k + 1) / tail) * (H / 2) * 0.95;
+    for (let r = Math.round(cy - half); r < Math.round(cy + half); r++) if (!(k === tail - 1 && Math.abs(r + 0.5 - cy) < H * 0.12)) set(L + k, r, "F"); // forked
+  }
+  for (let c = Math.round(L * 0.3); c < Math.round(L * 0.75); c++) {
+    const h = Math.round(dorsal * (1 - Math.abs(c - L * 0.45) / (L * 0.32)));
+    for (let r = Math.round(dorsal) - h; r < dorsal + 1; r++) if (g[r]?.[c] === ".") set(c, r, "F");
+  }
+  for (let c = Math.round(L * 0.35); c < Math.round(L * 0.65); c++) {
+    const h = Math.round(belly * (1 - Math.abs(c - L * 0.5) / (L * 0.3)));
+    for (let r = Math.round(dorsal + H) - 1; r < dorsal + H + h; r++) if (g[r]?.[c] === ".") set(c, r, "F");
+  }
+  const er = Math.round(cy - H * 0.12);
+  set(2, er, "E");
+  if (o.eye) set(2, er + 1, "E");
+  return g.map((row) => row.join(""));
+}
+
+const CLOWN = fishShape({ L: 11, H: 7, tail: 4, dorsal: 2, belly: 1, paint: (c) => (c === 3 || c === 4 || c === 8 ? "W" : "B") });
+const ANGEL = fishShape({ L: 9, H: 10, tail: 3, dorsal: 5, belly: 5, paint: (c) => (c % 3 === 1 ? "D" : "B") });
+const PUFFER = fishShape({ L: 10, H: 9, tail: 2, dorsal: 1, belly: 1, eye: 1, paint: (c, y, r) => (y > 0.62 ? "b" : (c * 7 + r * 3) % 5 === 0 ? "D" : "B") });
+const BLUETANG = fishShape({ L: 11, H: 8, tail: 4, dorsal: 2, belly: 1, paint: (c, y) => (c >= 4 && c <= 9 && y > 0.25 && y < 0.6 - (c - 4) * 0.04 ? "D" : "B") });
+const PARROT = fishShape({ L: 12, H: 7, tail: 4, dorsal: 2, belly: 1, paint: (c, y) => (c < 2 ? "Y" : y < 0.3 ? "G" : y > 0.66 ? "P" : "B") });
+const BARRACUDA = fishShape({ L: 19, H: 4, tail: 4, dorsal: 1, belly: 0, paint: (c, y) => (y < 0.4 ? "S" : "W") });
 
 const RAMP = "abcdefg"; // the whale's blues, from the deepest (a) to near-white (g)
 
@@ -210,6 +250,33 @@ function whale(betaDeg: number): string[] {
   return softRim(out.map((r) => r.join("")));
 }
 
+/**
+ * Green sea turtle swimming left (3 frames of the front flipper: raised, level, down): a domed shell with a scute
+ * pattern and a pale rim, a pale belly, a small head with an eye, a big paddle flipper and a short rear one.
+ */
+function turtle(f: number): string[] {
+  const g = grid(26, 15);
+  const set = setter(g);
+  const stroke = (x0: number, y0: number, x1: number, y1: number, v: string, w = 2) => {
+    for (let t = 0; t <= 1; t += 0.05) for (let k = 0; k < w; k++) set(Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t) + k, v);
+  };
+  for (let y = 0; y < 15; y++)
+    for (let x = 0; x < 26; x++) {
+      if (((x - 14) / 9) ** 2 + ((y - 7) / 5.6) ** 2 <= 1 && y <= 8) set(x, y, (x + y * 2) % 5 === 0 || (x + y) % 7 === 0 ? "L" : y <= 3 ? "S" : "D"); // shell
+      if (y === 8 && x >= 6 && x <= 22) set(x, y, "R"); // pale rim
+      if (y === 9 && x >= 8 && x <= 21) set(x, y, "Y"); // belly
+    }
+  for (let y = 5; y <= 9; y++) for (let x = 1; x <= 6; x++) if (((x - 3.5) / 3) ** 2 + ((y - 7.2) / 2.3) ** 2 <= 1) set(x, y, "K"); // head and neck
+  set(2, 6, "E");
+  set(1, 8, "Y"); // beak
+  stroke(23, 8, 25, 10, "F"); // tail and rear flipper
+  stroke(18, 9, 22, 12, "F");
+  const [ex, ey] = [[15, 3], [16, 9], [12, 13]][f]!;
+  stroke(9, 8, ex!, ey!, "F", 3); // the big front flipper
+  stroke(9, 8, ex!, ey!, "K", 1);
+  return g.map((row) => row.join(""));
+}
+
 function octopus(f: number): string[] {
   const g = grid(15, 16);
   const set = setter(g);
@@ -262,6 +329,13 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
   shark: { frames: [10, 0, -10, 0].map(shark), pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
   whale: { frames: [44, 24, 4, -18, -30, -18, 4, 24].map(whale), pal: { a: "#2c61b8", b: "#3d77cc", c: "#5a8fd8", d: "#7ba6e0", e: "#a3c2ec", f: "#c9dbf3", g: "#e8f0fb", E: "#12306c" }, alpha: 0.42, speed: 40, px: 2 },
+  clown: { frames: [CLOWN], pal: { B: "#f08a2c", W: "#f4f1ea", F: "#d9661a", E: "#1b1210" }, alpha: 0.55, speed: 55 },
+  angel: { frames: [ANGEL], pal: { B: "#e7d27a", D: "#4a7fbf", F: "#8fb3d8", E: "#101820" }, alpha: 0.5, speed: 38 },
+  puffer: { frames: [PUFFER], pal: { B: "#d9b36a", b: "#f1e3b8", D: "#8a6a30", F: "#c49a4e", E: "#101820" }, alpha: 0.5, speed: 30 },
+  bluetang: { frames: [BLUETANG], pal: { B: "#2e6fd6", D: "#0f2a5c", F: "#f0d34a", E: "#e8f0fb" }, alpha: 0.55, speed: 62 },
+  parrot: { frames: [PARROT], pal: { G: "#3cb878", B: "#3cc6c0", P: "#e88aa8", Y: "#f0d34a", F: "#3cb878", E: "#101820" }, alpha: 0.5, speed: 48 },
+  barracuda: { frames: [BARRACUDA], pal: { S: "#7f98a6", W: "#dce5ee", F: "#5f7684", E: "#101820" }, alpha: 0.5, speed: 110 },
+  turtle: { frames: [turtle(0), turtle(1), turtle(2), turtle(1)], pal: { S: "#2f8a52", D: "#1f6a3e", L: "#5fbf7a", R: "#c9d98a", Y: "#e8e6b0", K: "#6a8f4a", F: "#3f9a5c", E: "#0b1a12" }, alpha: 0.7, speed: 24 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },
@@ -270,10 +344,10 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
 
 /** What lives in each layer, chosen by the layer's depth. Every layer has fish. */
 function plan(depth: number): [Kind, number][] {
-  if (depth < 8) return [["minnow", 3], ["horde", 1]];
-  if (depth < 30) return [["minnow", 3], ["tang", 1], ["horde", 1]];
-  if (depth < 80) return [["tang", 3], ["minnow", 2], ["horde", 1], ["jelly", 1], ["diver", 1]];
-  if (depth < 160) return [["jelly", 2], ["lantern", 3], ["tang", 1], ["horde", 1]];
+  if (depth < 8) return [["turtle", 2], ["minnow", 3], ["clown", 1], ["parrot", 1], ["bluetang", 1], ["horde", 1]];
+  if (depth < 30) return [["minnow", 2], ["tang", 1], ["angel", 1], ["clown", 1], ["puffer", 1], ["parrot", 1], ["horde", 1]];
+  if (depth < 80) return [["tang", 2], ["minnow", 2], ["bluetang", 1], ["angel", 1], ["puffer", 1], ["barracuda", 1], ["horde", 1], ["jelly", 1], ["diver", 1]];
+  if (depth < 160) return [["jelly", 2], ["lantern", 3], ["barracuda", 1], ["puffer", 1], ["horde", 1]];
   return [["octopus", 1], ["jelly", 2], ["lantern", 4]];
 }
 
@@ -353,7 +427,7 @@ export function drawSchool(ctx: CanvasRenderingContext2D, w: World, school: Scho
     const s = SPR[c.kind];
     const b = school.bands[c.band];
     if (!b) continue;
-    const rows = s.frames[Math.floor(t / (c.kind === "jelly" || c.kind === "octopus" ? 500 : 280)) % s.frames.length]!;
+    const rows = s.frames[Math.floor(t / (c.kind === "jelly" || c.kind === "octopus" ? 500 : c.kind === "turtle" ? 420 : 280)) % s.frames.length]!;
     const px = s.px ?? 3; // the big animals are drawn at 2px pixels for more detail
     const sw = Math.max(...rows.map((r) => r.length)) * px + (s.spread ?? 0);
     const travel = Math.max(200, w.w - 80 - sw);

@@ -12,7 +12,7 @@ import type { World } from "./world";
 
 type Bubble = { x: number; y: number; life: number };
 
-const PX = 2; // the main fish is drawn at 2px pixels (36 x 21 cells = 72 x 42)
+const PX = 2; // the main fish is drawn at 2px pixels (40 x 25 cells = 80 x 50)
 const EDGE = 60; // the fish may swim anywhere between these margins sideways
 const LIMIT_TOP = 0.3; // vertical limits (fractions of the screen): at either one the page scrolls instead
 const LIMIT_BOTTOM = 0.66;
@@ -137,7 +137,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     ctx.rotate((-tilt * Math.PI) / 180); // head-down when diving (the sprite's head is on its left)
     ctx.scale(PX, PX);
     ctx.translate(-FISH_W / 2, -FISH_H / 2);
-    drawFish(ctx, !opts.reducedMotion && Math.floor(t / (world.moving > 0.2 ? 120 : 300)) % 2 === 0);
+    drawFish(ctx, opts.reducedMotion ? 0 : t, world.moving > 0.2);
     ctx.restore();
 
     drawHint(ctx, world, hint);

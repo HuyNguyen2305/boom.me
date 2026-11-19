@@ -4,7 +4,7 @@ import { Section } from "./Section";
 
 export function Contact() {
   return (
-    <Section id="contact" depth="−200 m · sea floor" title="Contact" band="bg-depth-4">
+    <Section id="contact" depth="−200 m · sea floor" title="Contact" band="bg-depth-4" className="pb-52 sm:pb-64">
       <a href={`mailto:${profile.email}`} className="break-all font-display text-3xl font-bold sm:text-5xl">
         {profile.email}
       </a>

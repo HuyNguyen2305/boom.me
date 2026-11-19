@@ -1,70 +1,93 @@
 import { drawSprite } from "./entities/pixels";
 
-// The main fish (teal body, kelp tail, head left) at 2px pixels: 36 x 21 cells = 72 x 42.
-// Smooth shading only: three clean tones and a soft highlight band, no scale marks, no stipple, no white in the eye.
-const W = 36;
-const H = 21;
-const CX = 13;
-const CY = 10;
-const RX = 13;
-const RY = 9.5;
+// The main fish: a blue-grey tuna with yellow fins, a small eye and a crescent tail, at 2px pixels (40 x 25 cells).
+// The body is shaded top to bottom through a blue-grey ramp. The rear half bends as a travelling wave, so the whole
+// tail sweeps smoothly: 8 frames of one full stroke.
+const W = 40;
+const H = 25;
+const CY = 12;
+const FRAMES_N = 8;
 
 export const FISH_W = W;
 export const FISH_H = H;
 
-const COLORS = { D: "#2a9a95", T: "#3cc6c0", H: "#5fdcd5", L: "#8fe3df", K: "#7fbf7a", k: "#68a864", E: "#06222a" };
+// a: back ... f: belly; Y/y/z: yellow fin tones; E: eye
+const COLORS = {
+  a: "#34495f", b: "#44607a", c: "#587b97", d: "#7699b0", e: "#a3bccb", f: "#d3e0e8",
+  Y: "#f0c43c", y: "#d9a72b", z: "#f6dd7a", E: "#0a1822", m: "#2a3d50",
+};
 
-function build(tailDy: number): string[] {
+function build(phase: number): string[] {
   const g: string[][] = Array.from({ length: H }, () => Array<string>(W).fill("."));
+  const bend = (c: number) => (c <= 14 ? 0 : 4.2 * Math.sin(phase) * ((c - 14) / 25) ** 2);
   const set = (c: number, r: number, v: string) => {
-    if (r >= 0 && r < H && c >= 0 && c < W) g[r]![c] = v;
+    const rr = Math.round(r + bend(c));
+    if (rr >= 0 && rr < H && c >= 0 && c < W) g[rr]![c] = v;
   };
-  const top = (c: number) => {
-    const u = (c - CX) / RX;
-    return Math.abs(u) > 1 ? null : CY - RY * Math.sqrt(1 - u * u);
+  // body half-thickness by column: a pointed snout, fullest at c 12, then a long taper to a slim tail stalk
+  const half = (c: number) => {
+    if (c < 0 || c > 31) return 0;
+    if (c <= 12) return 6.6 * Math.sin((Math.PI / 2) * Math.min(1, (c + 0.6) / 13)) ** 0.85;
+    return 1.2 + (6.6 - 1.2) * (1 - (c - 12) / 19) ** 1.3;
   };
+  const topOf = (c: number) => CY - half(c);
+  const botOf = (c: number) => CY + half(c);
 
-  // tail: a notched fan; it flaps by shifting its centre. Solid kelp with a slightly darker trailing edge
-  const tc = CY + tailDy;
-  for (let c = 24; c < W; c++) {
-    const k = c - 24;
-    const half = 2.2 + k * 0.7;
-    const notch = k >= 6 ? (k - 5) * 0.75 : 0;
-    for (let r = Math.round(tc - half); r <= Math.round(tc + half); r++) if (Math.abs(r - tc) >= notch) set(c, r, c >= W - 2 ? "k" : "K");
-  }
-  // dorsal, pectoral and anal fins: solid
-  [0, 1, 2, 3, 4, 4, 4, 3, 3, 2, 1].forEach((h, i) => {
-    const c = 10 + i;
-    const t = top(c);
-    if (t === null) return;
-    for (let r = Math.round(t) - h; r <= Math.round(t); r++) set(c, r, "K");
-  });
-  for (let i = 0; i < 5; i++) for (let r = CY + 2; r <= CY + 2 + (4 - i); r++) set(12 + i, r, i === 0 ? "k" : "K");
-  [1, 2, 2, 1].forEach((h, i) => {
-    const t = top(18 + i);
-    if (t === null) return;
-    const bottom = Math.round(2 * CY - t);
-    for (let r = bottom; r <= bottom + h; r++) set(18 + i, r, "K");
-  });
-  // body: dark back, teal flank, light belly, with one soft highlight band along the upper flank
-  for (let r = 0; r < H; r++) {
-    for (let c = 0; c < W; c++) {
-      const dx = (c - CX) / RX;
-      const dy = (r - CY) / RY;
-      if (dx * dx + dy * dy > 1) continue;
-      let v = dy < -0.5 ? "D" : dy > 0.45 ? "L" : "T";
-      if (v === "T" && dy < -0.28 && dx > -0.55 && dx < 0.6) v = "H";
-      set(c, r, v);
+  // crescent tail: a solid fan with a notch, darker at the leading edge and paler at the tips
+  for (let k = 0; k < 10; k++) {
+    const spread = 0.6 + k * 0.55;
+    const th = 2;
+    for (let d = 0; d <= Math.ceil(spread + th); d++) {
+      if (k >= 4 && d < spread - th) continue;
+      if (d > spread + th) continue;
+      const v = k < 4 ? "y" : k > 6 ? "z" : "Y";
+      set(30 + k, CY + d, v);
+      if (d) set(30 + k, CY - d, v);
     }
   }
-  [[1, 12], [2, 12], [3, 13]].forEach(([c, r]) => set(c!, r!, "D")); // mouth
-  // eye: a plain dark disc (no white)
-  for (let r = 7; r <= 10; r++) for (let c = 3; c <= 6; c++) if (!((r === 7 || r === 10) && (c === 3 || c === 6))) set(c, r, "E");
+  // dorsal fins, finlets, pectoral and anal fins: yellow, swept back
+  [1, 3, 4, 4, 3, 3, 2, 1].forEach((h, i) => {
+    const c = 10 + i;
+    const t = Math.round(topOf(c));
+    for (let r = t - h; r <= t; r++) set(c, r, r === t - h ? "z" : "Y");
+  });
+  [1, 2, 2, 1].forEach((h, i) => {
+    const c = 20 + i;
+    const t = Math.round(topOf(c));
+    for (let r = t - h; r <= t; r++) set(c, r, "Y");
+  });
+  [1, 2, 2, 1].forEach((h, i) => {
+    const c = 21 + i;
+    const b = Math.round(botOf(c));
+    for (let r = b; r <= b + h; r++) set(c, r, "Y");
+  });
+  for (let i = 0; i < 6; i++) {
+    const c = 24 + i;
+    if (i % 2 === 0) set(c, Math.round(topOf(c)) - 1, "y");
+    else set(c, Math.round(botOf(c)) + 1, "y");
+  }
+  for (let i = 0; i < 5; i++) for (let r = 0; r <= 3 - Math.floor(i / 2); r++) set(10 + i, CY + 3 + r + Math.floor(i / 2), i === 0 ? "y" : "Y"); // pectoral
+
+  // body: vertical blue-grey gradient (dark back, silver belly), gently lighter toward the head
+  for (let c = 0; c < 32; c++) {
+    const h = half(c);
+    const t0 = CY - h;
+    const hh = h * 2;
+    for (let r = Math.ceil(t0); r <= Math.floor(CY + h); r++) {
+      const rel = (r - t0) / hh;
+      const i = Math.max(0, Math.min(5, Math.floor(rel * 6.4 - 0.2 + (c < 8 ? 0.3 : 0))));
+      set(c, r, "abcdef"[i]!);
+    }
+  }
+  // mouth line and a small eye
+  set(0, CY + 1, "m");
+  set(1, CY + 1, "m");
+  for (let r = CY - 3; r <= CY - 2; r++) for (let c = 4; c <= 5; c++) set(c, r, "E");
   return g.map((row) => row.join(""));
 }
 
-const FRAMES = [build(-1), build(1)];
+const FRAMES = Array.from({ length: FRAMES_N }, (_, i) => build((i / FRAMES_N) * Math.PI * 2));
 
-export function drawFish(ctx: CanvasRenderingContext2D, flap: boolean) {
-  drawSprite(ctx, FRAMES[flap ? 0 : 1]!, COLORS, 0, 0, 1);
+export function drawFish(ctx: CanvasRenderingContext2D, t: number, fast: boolean) {
+  drawSprite(ctx, FRAMES[Math.floor(t / (fast ? 70 : 120)) % FRAMES_N]!, COLORS, 0, 0, 1);
 }

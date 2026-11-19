@@ -3,6 +3,7 @@ import { drawSprite } from "./pixels";
 
 type Pal = Record<string, string>;
 const PX = 3;
+const SAND = 44; // depth of the sand strip; the Contact section leaves room above it so corals never cover its buttons
 
 const grid = (w: number, h: number) => Array.from({ length: h }, () => Array<string>(w).fill("."));
 const setter = (g: string[][]) => (c: number, r: number, v: string) => {
@@ -216,7 +217,7 @@ function layout(width: number): Item[] {
 export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
   const fy = Math.round(w.floorY - w.scrollY);
   if (fy > w.h + 140 || fy < -140) return;
-  const sandTop = fy - 24;
+  const sandTop = fy - SAND;
   const t = w.reduced ? 0 : w.t;
 
   // the wreck sits in the background, on the right, half buried
@@ -227,10 +228,28 @@ export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
     ctx.globalAlpha = 1;
   }
 
+  // tall seaweed, behind everything else: slim two-tone fronds that sway more toward the tip
+  for (let x = 30, i = 0; x < w.w; x += 110 + seed(i, 5) * 90, i++) {
+    const n = 20 + Math.floor(seed(i, 6) * 14); // 100 to 165px tall
+    const lean = (seed(i, 7) - 0.5) * 10;
+    for (let s = 0; s < n; s++) {
+      const k = s / n;
+      const sway = w.reduced ? 0 : Math.sin(t / 900 + i * 2 + s * 0.28) * (2 + k * 9);
+      const px = Math.round(x + lean * k + sway);
+      const y = sandTop + 8 - (s + 1) * 5;
+      ctx.fillStyle = k < 0.5 ? "#3f8f58" : "#5fae6a";
+      ctx.fillRect(px, y, 4, 6);
+      if (s % 4 === 2) ctx.fillRect(px + (i % 2 ? 4 : -4), y + 1, 4, 3); // a leaf
+    }
+  }
+
   ctx.fillStyle = "#c98b55";
-  ctx.fillRect(0, sandTop, w.w, 24);
+  ctx.fillRect(0, sandTop, w.w, SAND);
   ctx.fillStyle = "#a76f3f";
-  for (let x = 0; x < w.w; x += 24) ctx.fillRect(x + (x % 3) * 4, fy - 20, 4, 3);
+  for (let x = 0; x < w.w; x += 24) {
+    ctx.fillRect(x + (x % 3) * 4, sandTop + 8, 4, 3);
+    ctx.fillRect(x + 10 + (x % 5) * 3, sandTop + 24, 6, 3);
+  }
 
   const ground = sandTop + 4; // sprites sink a little into the sand
   for (const [i, it] of layout(w.w).entries()) {

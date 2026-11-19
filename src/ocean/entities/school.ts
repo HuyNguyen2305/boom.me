@@ -83,7 +83,7 @@ function shark(tailDy: number): string[] {
 
 /** Whale at 2px (105 x 52 cells): tubercles, pleats, scars, barnacles, a long banded flipper and notched flukes. */
 function whale(tailDy: number): string[] {
-  const W = 105;
+  const W = 112;
   const H = 52;
   const bw = 84;
   const cy = 21;
@@ -94,14 +94,26 @@ function whale(tailDy: number): string[] {
     const u = t < 0.3 ? (0.3 - t) / 0.3 : (t - 0.3) / 0.7;
     return Math.max(c > bw * 0.6 ? 2.4 : 0, 15 * Math.pow(Math.max(0, 1 - u * u), 0.6));
   };
-  const tc = cy + tailDy * 3;
-  for (let k = 0; k < W - bw + 3; k++) {
-    const c = bw - 3 + k;
-    const e = 2.4 + k * 0.62;
-    const notch = k >= 11 ? (k - 10) * 0.9 : 0;
-    for (let r = Math.round(tc - e * 1.1); r <= Math.round(tc + e * 0.85); r++)
-      if (Math.abs(r - tc) >= notch) set(c, r, k > 17 || (k > 6 && r % 4 === 0) ? "F" : "f"); // ridged flukes
+  // tail: the stock curves up, and the flukes spread left and right from its tip (horizontal, as a real whale's are)
+  const fx = bw + 8;
+  const fy = cy - 14 + tailDy * 3; // the beat moves the fluke tip
+  for (let i = 0; i <= 60; i++) {
+    const u = i / 60;
+    const x = (1 - u) ** 2 * (bw - 4) + 2 * (1 - u) * u * (bw + 14) + u * u * fx;
+    const y = (1 - u) ** 2 * cy + 2 * (1 - u) * u * (cy - 1) + u * u * fy;
+    const r = 2.6 - u * 0.8; // the stock thins toward the flukes
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (dx * dx + dy * dy <= r * r) set(Math.round(x + dx), Math.round(y + dy), dy < 0 ? "G" : "g");
   }
+  for (const side of [-1, 1]) {
+    for (let k = 1; k <= 19; k++) {
+      const h = 0.6 + 3.4 * Math.sin(Math.PI * Math.pow(k / 19, 0.8)); // a leaf-shaped lobe
+      const lift = (k * k) / 19 * 0.14; // the tips curve up
+      for (let r = Math.round(fy - lift - h * 0.45); r <= Math.round(fy - lift + h); r++)
+        set(fx + side * k, r, (k % 4 === 0 && r === Math.round(fy - lift)) || k === 19 ? "F" : r === Math.round(fy - lift - h * 0.45) ? "F" : "f");
+    }
+  }
+  set(fx, fy, "D"); // the notch between the flukes
+  set(fx, fy + 1, "D");
   for (let c = 0; c < bw; c++) {
     const hh = half(c);
     for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {

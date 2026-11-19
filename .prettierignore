@@ -1,0 +1,9 @@
+.next
+node_modules
+graphify-out
+test-results
+pnpm-lock.yaml
+public
+docs
+vault
+.claude

@@ -1,5 +1,6 @@
 import type { World } from "../world";
 import { drawSprite } from "./pixels";
+import { POSEIDON, POSEIDON_PAL, STATUE_W } from "./poseidon";
 import { diverSpan, drawSignDiver } from "./signdiver";
 
 type Pal = Record<string, string>;
@@ -114,6 +115,57 @@ const STAR = ["...O...", "..OOO..", "OOOOOOO", ".OOOOO.", ".OO.OO.", "OO...OO"];
 const SHELL = [".cccc.", "cCcCcC", ".CCCC.", "..CC.."];
 const ROCK = ["...GGGG..", "..GGGGGG.", ".GGGGGGGG", "GgGGGGGGg", "GGGGGGGGG"];
 
+// ---- rocks: G body, g lit top-left, d shadow right and below, m moss, K/k cave mouth and its deeper dark ----
+/** A rounded rock mound W x H cells: lit from the top-left, shaded toward the right, ragged top edge. */
+function mound(W: number, H: number, seed: number): string[] {
+  const r = rng(seed);
+  const g = grid(W, H);
+  const set = setter(g);
+  const cx = (W - 1) / 2;
+  for (let c = 0; c < W; c++) {
+    const h = Math.round(H * Math.sqrt(Math.max(0, 1 - ((c - cx) / (cx + 0.6)) ** 2)) * (0.9 + r() * 0.12));
+    for (let y = H - h; y < H; y++) {
+      const top = y - (H - h);
+      let v = top < 2 && c < cx * 1.2 ? "g" : c > cx * 1.35 || y > H - 2 ? "d" : "G";
+      if (r() > 0.93) v = v === "G" ? "g" : "G"; // speckle
+      set(c, y, v);
+    }
+  }
+  return join(g);
+}
+
+/** A rock cave seen from the front: a big mound with an arched mouth, moss on top, and cracks. */
+function cave(): string[] {
+  const W = 64;
+  const H = 36;
+  const body = mound(W, H, 5).map((row) => [...row]);
+  const set = setter(body);
+  const r = rng(9);
+  const ox = 26;
+  const hw = 12;
+  for (let c = ox - hw; c <= ox + hw; c++) {
+    const h = Math.round(19 * Math.sqrt(Math.max(0, 1 - ((c - ox) / (hw + 0.5)) ** 2)));
+    for (let y = H - h; y < H; y++) set(c, y, y < H - h + 3 ? "K" : "k"); // the mouth: lighter at the rim, darker inside
+  }
+  for (let c = 0; c < W; c++) for (let y = 0; y < H; y++) if (body[y]![c] === "g" && y < 8 && r() > 0.55) set(c, y, "m"); // moss on the crown
+  for (let i = 0; i < 4; i++) { // cracks
+    let x = 6 + Math.floor(r() * 52);
+    for (let y = 6 + Math.floor(r() * 6); y < 12 + Math.floor(r() * 8); y++) {
+      if (body[y]![x] !== "." && body[y]![x] !== "K" && body[y]![x] !== "k") set(x, y, "d");
+      x += r() > 0.5 ? 1 : 0;
+    }
+  }
+  return join(body);
+}
+const CAVE = cave();
+
+/** Poseidon sits in the right corner at 4px pixels on wide screens, 3px on mid, 2px on phones. */
+const poseidonPixel = (width: number) => (width >= 1400 ? 4 : width >= 640 ? 3 : 2);
+const poseidonLeft = (width: number) => width - STATUE_W * poseidonPixel(width) - 4;
+const ROCK_PAL: Pal = { G: "#59686e", g: "#7d8e94", d: "#3b484e", m: "#4f7d52", K: "#0b161b", k: "#050b0e" };
+const WARM_PAL: Pal = { G: "#8a6f58", g: "#a88a70", d: "#5e4a3a" };
+const PALE_PAL: Pal = { G: "#a8a08c", g: "#cfc6ae", d: "#7a7462" };
+
 type Spr = { frames: string[][]; pal: Pal };
 const orange: Pal = { C: "#e0705a", c: "#f4a08a", D: "#a84434" };
 const pink: Pal = { C: "#e58a9c", c: "#f6b8c4", D: "#a85468" };
@@ -133,6 +185,10 @@ const KINDS: Record<string, Spr> = {
   star: { frames: [STAR], pal: { O: "#e0884a" } },
   shell: { frames: [SHELL], pal: { C: "#f0e0c0", c: "#c9b48e" } },
   rock: { frames: [ROCK], pal: { G: "#6a7a80", g: "#8a9aa0" } },
+  boulder0: { frames: [mound(15, 10, 3)], pal: ROCK_PAL },
+  boulder1: { frames: [mound(11, 7, 8)], pal: WARM_PAL },
+  boulder2: { frames: [mound(20, 8, 12)], pal: ROCK_PAL },
+  pebbles: { frames: [[".gg....g.", "GGGd.gGd.", "GGGGdGGGd"]], pal: PALE_PAL },
 };
 
 // ---- the wreck: a broken, sunken wooden ship lying bow-up in the sand ----
@@ -185,9 +241,15 @@ const SHIP_PAL = {
 const ORDER = [
   "branch0", "whip", "table", "bubble", "brain0", "tube0", "branch1", "kelp", "anemone", "grass", "branch2", "brain1",
   "whip", "kelp", "tube1", "table", "bubble", "branch0", "star", "grass", "branch1", "shell", "tube0", "rock", "kelp",
+  "boulder0", "pebbles", "boulder1", "boulder2", "pebbles",
 ];
 
 const seed = (i: number, n: number) => (((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1) + 1) % 1;
+
+/** The cave is drawn at 4px pixels on wide screens, 3px otherwise. */
+const cavePixel = (width: number) => (width >= 1400 ? 4 : 3);
+/** Horizontal span of the cave's mouth (cells 14 to 38), kept clear of corals. */
+const caveMouth = (width: number) => [14 * cavePixel(width), 38 * cavePixel(width)] as const;
 
 /** Where the wreck lies: right of the content column, 4px pixels on wide screens. */
 function wreck(width: number) {
@@ -208,10 +270,13 @@ function layout(width: number): Item[] {
     const ship = wreck(width);
     // keep the wreck clear: only pebbles, shells and stars may sit in front of it
     const [dl, dr] = diverSpan(width);
-    const low = ["rock", "shell", "star"].includes(kind);
+    const low = ["rock", "shell", "star", "boulder0", "boulder1", "boulder2", "pebbles"].includes(kind);
     const hidesWreck = ship.show && x + sw > ship.left && x < ship.right && !low;
+    const [ml, mr] = caveMouth(width);
+    const hidesStatue = x + sw > poseidonLeft(width) + 6 * poseidonPixel(width) && !low;
+    const hidesCave = x + sw > ml && x < mr && !low;
     const hidesDiver = x + sw > dl && x < dr && !low; // the diver stands in a clearing
-    if (!hidesWreck && !hidesDiver) items.push({ kind, x });
+    if (!hidesWreck && !hidesDiver && !hidesCave && !hidesStatue) items.push({ kind, x });
     x += sw + 6 + seed(i, 2) * 36;
   }
   cache = { w: width, items };
@@ -257,6 +322,42 @@ export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
   }
 
   const ground = sandTop + 4; // sprites sink a little into the sand
+
+  // Poseidon in the right corner, in front of the wreck's far end: marble with a shiny golden trident
+  const pp = poseidonPixel(w.w);
+  const px0 = poseidonLeft(w.w);
+  const py0 = ground + 10 - POSEIDON.length * pp;
+  ctx.globalAlpha = 0.95;
+  drawSprite(ctx, POSEIDON, POSEIDON_PAL, px0, py0, pp);
+  ctx.globalAlpha = 1;
+  // a glint travels up the staff and flares on the prongs; reduced motion shows a still sparkle
+  const glint = w.reduced ? 0 : (t % 2600) / 2600;
+  ctx.fillStyle = "#fffbe0";
+  const gy = py0 + (glint < 0.7 ? 76 - glint * (72 / 0.7) : 1) * pp;
+  const flare = glint >= 0.7 ? Math.sin(((glint - 0.7) / 0.3) * Math.PI) : 0;
+  const gx = px0 + 41 * pp;
+  ctx.globalAlpha = w.reduced ? 0.9 : glint < 0.7 ? 0.7 : flare;
+  ctx.fillRect(gx, gy, pp, pp);
+  if (glint >= 0.7 || w.reduced) {
+    const a = Math.max(1, Math.round(pp * 1.5 * (w.reduced ? 1 : flare)));
+    ctx.fillRect(gx - a, gy, a, pp);
+    ctx.fillRect(gx + pp, gy, a, pp);
+    ctx.fillRect(gx, gy - a, pp, a);
+    ctx.fillRect(gx, gy + pp, pp, a);
+  }
+  ctx.globalAlpha = 1;
+
+  // the rock cave in the left corner, behind the corals; something with yellow eyes lives in it
+  const cavePx = cavePixel(w.w);
+  drawSprite(ctx, CAVE, ROCK_PAL, 0, ground + 10 - CAVE.length * cavePx, cavePx);
+  if (w.reduced || t % 7000 > 400) {
+    ctx.fillStyle = "#f0d34a";
+    ctx.globalAlpha = 0.85;
+    const ey = ground + 10 - 7 * cavePx;
+    ctx.fillRect(23 * cavePx, ey, cavePx, cavePx);
+    ctx.fillRect(28 * cavePx, ey, cavePx, cavePx);
+    ctx.globalAlpha = 1;
+  }
   for (const [i, it] of layout(w.w).entries()) {
     if (it.kind === "kelp" || it.kind === "grass") {
       const n = it.kind === "kelp" ? 10 : 6;
@@ -272,6 +373,13 @@ export function drawSeafloor(ctx: CanvasRenderingContext2D, w: World) {
     const spr = KINDS[it.kind]!;
     const rows = spr.frames[Math.floor(t / 600 + i) % spr.frames.length]!;
     drawSprite(ctx, rows, spr.pal, it.x, ground - rows.length * PX, PX);
+  }
+  // pebbles scattered over the sand, in front of the coral bases
+  const stones = [PALE_PAL, ROCK_PAL, WARM_PAL];
+  const bits = [["gG", "GG"], [".gg.", "GGGd"], ["gGd"], ["gg.", "GGGd", ".dd."]];
+  for (let x = 8, i = 0; x < w.w; x += 16 + seed(i, 11) * 34, i++) {
+    const rows = bits[Math.floor(seed(i, 12) * bits.length)]!;
+    drawSprite(ctx, rows, stones[Math.floor(seed(i, 13) * stones.length)]!, Math.round(x), Math.round(sandTop + 16 + seed(i, 14) * 22), 2);
   }
   drawSignDiver(ctx, w, sandTop);
 }

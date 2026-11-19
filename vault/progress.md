@@ -6,14 +6,16 @@ Current state of the portfolio build. Update at the end of every session.
 - [x] Scaffold Next.js 15 + TS strict + Tailwind 4 (pnpm), design tokens + fonts
 - [x] Static shell: Nav, Hero, About, Skills, Projects, Contact, Footer (placeholder copy in src/content/site.ts)
 - [x] Playwright e2e (tests/e2e/sections.spec.ts): sections render, empty states, no h-scroll at 375/1280
+- [x] Ocean v1: canvas fish (tilt, bubbles), scroll-to-depth, Hud depth meter, reduced-motion still frame
 - [x] pnpm build, typecheck and test all pass
 
 ## In progress
+- (none)
 -
 
 ## Next
 - [ ] Mobile menu button, section reveal, active nav link (small client bits)
-- [ ] Ocean game in src/ocean (fish, gauge/Hud, helm mode) per CLAUDE.md
+- [ ] Ocean extras: boat, schools, seafloor, helm mode (WASD), gauge stops as links
 - [ ] Real content in src/content/site.ts, og image, favicon
 - [ ] Deploy on Vercel
 

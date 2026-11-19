@@ -1,14 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Project } from "@/content/types";
+import { fishYBus } from "@/ocean/events";
 import { Chip } from "./Chip";
 
 const isTyping = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 
-/** The project card nearest the fish (42% down the screen) that is on screen, or null. */
+/** The project card nearest the fish that is on screen, or null. */
 function cardNearFish(): number | null {
-  const band = innerHeight * 0.42;
+  const band = fishYBus.get() || innerHeight * 0.42;
   let best: { i: number; d: number } | null = null;
   document.querySelectorAll<HTMLElement>("[data-project]").forEach((el) => {
     const r = el.getBoundingClientRect();

@@ -4,7 +4,7 @@ import { drawHint } from "./entities/hint";
 import { drawSeafloor } from "./entities/seafloor";
 import { createSchool, drawSchool, type Band } from "./entities/school";
 import { drawSky } from "./entities/sky";
-import { depthBus } from "./events";
+import { depthBus, fishYBus } from "./events";
 import { createInput } from "./input";
 import { depthAt, readFloor, readLane, readStops, readSurface, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
@@ -13,7 +13,9 @@ import type { World } from "./world";
 type Bubble = { x: number; y: number; life: number };
 
 const PX = 2; // the main fish is drawn at 2px pixels (36 x 21 cells = 72 x 42)
-const EDGE = 60; // the fish may swim anywhere between these margins
+const EDGE = 60; // the fish may swim anywhere between these margins sideways
+const LIMIT_TOP = 0.3; // vertical limits (fractions of the screen): at either one the page scrolls instead
+const LIMIT_BOTTOM = 0.66;
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
   const ctx = canvas.getContext("2d")!;
@@ -27,6 +29,8 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
   let swimX = 0; // distance swum left (negative: right) from the home lane
   let used = false; // has the visitor steered yet? the hint fades once they have
   let hint = 1;
+  let fyFrac = 0.42; // the fish's height on screen, as a fraction of the viewport
+  let prevFy = 0;
   let raf = 0;
   const world: World = {
     w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, laneX: 0, depth: 0,
@@ -62,25 +66,46 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     world.scrollY = scrollY;
     world.moving = Math.min(Math.abs(vy) / 20, 1);
 
+    const narrow = world.w < 640;
+    const surfaceScreen = world.surfaceY - scrollY;
+    let fy = narrow ? world.h - 70 : fyFrac * world.h;
+
     if (input) {
-      if (input.held("up")) scrollBy({ top: -14, behavior: "instant" });
-      if (input.held("down")) scrollBy({ top: 14, behavior: "instant" });
+      const lo = world.h * LIMIT_TOP;
+      const hi = world.h * LIMIT_BOTTOM;
+      const atTop = scrollY <= 0;
+      const atBottom = scrollY >= document.documentElement.scrollHeight - innerHeight - 1;
+      const speed = 5;
+      // the fish swims freely between the two limits; only when it is at one does the page scroll.
+      // When the page cannot scroll any further the fish may go beyond the limit, up to the waterline or the bottom edge.
+      if (input.held("up")) {
+        if (fy > lo + 0.5) fy = Math.max(lo, fy - speed);
+        else if (!atTop) scrollBy({ top: -14, behavior: "instant" });
+        else fy = Math.max(surfaceScreen + 60, fy - speed);
+      }
+      if (input.held("down")) {
+        if (fy < hi - 0.5) fy = Math.min(hi, fy + speed);
+        else if (!atBottom) scrollBy({ top: 14, behavior: "instant" });
+        else fy = Math.min(world.h - 90, fy + speed);
+      }
       const dx = (input.held("right") ? 1 : 0) - (input.held("left") ? 1 : 0);
       if (dx) world.facing = dx > 0 ? -1 : 1; // sprite head points left
       swimX = Math.max(world.laneX - (world.w - EDGE), Math.min(world.laneX - EDGE, swimX - dx * 5));
       if (input.any()) used = true;
     }
+    fy = Math.max(fy, surfaceScreen + 60); // never above the waterline
+    if (!narrow) fyFrac = fy / world.h;
     hint += ((used || scrollY > 120 ? 0 : 1) - hint) * 0.08;
 
-    const target = opts.reducedMotion ? 0 : Math.max(-1, Math.min(1, vy / 20)) * 32; // head-down when diving
+    const dyFish = prevFy ? fy - prevFy : 0;
+    prevFy = fy;
+    // head-down when diving, whether the fish itself swims down or the page scrolls down
+    const target = opts.reducedMotion ? 0 : Math.max(-1, Math.min(1, (vy + dyFish) / 20)) * 32;
     tilt += (target - tilt) * 0.1;
 
-    const narrow = world.w < 640;
-    const surfaceScreen = world.surfaceY - scrollY;
     world.fishX = narrow ? world.w - 50 : world.laneX - swimX;
-    // below the waterline at the top of the page, then held at 42% of the screen
-    const base = narrow ? world.h - 70 : world.h * 0.42;
-    world.fishY = Math.max(base, surfaceScreen + 70) + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
+    world.fishY = fy + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
+    fishYBus.set(world.fishY);
 
     world.depth = Math.round(depthAt(stops, scrollY + world.fishY)); // the fish's own depth
     depthBus.set(world.depth);

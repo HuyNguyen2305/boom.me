@@ -27,3 +27,4 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Whale and shark art follows the user's pixel references: chunky dark outline, flat shading, pale belly, whale tail curves up into flukes, shark has a fat crescent tail. Preview sprites offline by transpiling school.ts and rendering with PIL (no dev server needed).
 - Whale tail (user feedback): the whole rear half of the body bends with the tail like a lever, tip up then tip down; never move only the tip or hinge a separate tail piece. Built by bending a straight source raster along a curved spine (school.ts whale()).
 - Whale silhouette (user feedback): one continuous taper from the body into a long slim tail, never a thick stick stuck on an oval. Shark is approved as is.
+- Main fish control: arrow up/down move the fish on screen between two limits; the page scrolls only when the fish is at a limit (or the page cannot scroll further). Fish eye has no white.

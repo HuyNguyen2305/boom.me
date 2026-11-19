@@ -75,3 +75,14 @@ test("the first screen is only sky, hero and About: Skills starts below the fold
   const skills = await page.locator("#skills").boundingBox();
   expect(skills!.y).toBeGreaterThanOrEqual(page.viewportSize()!.height - 2);
 });
+
+test("the fish swims between two limits before the page scrolls", async ({ page }) => {
+  test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
+  await page.goto("/");
+  await page.locator("canvas").waitFor();
+  await page.keyboard.down("ArrowDown");
+  await page.waitForTimeout(150);
+  expect(await page.evaluate(() => scrollY)).toBe(0); // still inside the limits: only the fish moves
+  await expect.poll(() => page.evaluate(() => scrollY), { timeout: 8000 }).toBeGreaterThan(50); // at the lower limit the page scrolls
+  await page.keyboard.up("ArrowDown");
+});

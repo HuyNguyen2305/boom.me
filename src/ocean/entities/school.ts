@@ -161,9 +161,9 @@ function whaleSource(fluke: number) {
       let v = "G";
       if (fr < -0.45) v = "h";
       else if (dx * 0.9 + dyo * 0.6 > 0.62 || (c > cx + 10 && fr > 0.3)) v = "d"; // shaded rear flank and underside of the tail
-      const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 36) * 0.85; // jagged pale throat, rising into the flank
+      const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 56) * 0.8; // jagged pale belly: long, rising into the flank only far back
       if (r > throat) v = (c * 7 + r * 3) % 11 === 0 ? "w" : "W";
-      else if (r > throat - 2 && r <= throat && c < 62) v = "d"; // dark seam above the throat
+      else if (r > throat - 2 && r <= throat && c < 78) v = "d"; // dark seam above the throat
       put(c, r, v);
     }
   }

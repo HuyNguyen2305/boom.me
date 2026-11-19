@@ -16,3 +16,5 @@ function createBus<T>(initial: T) {
 }
 
 export const depthBus = createBus(0);
+/** Screen y of the main fish, so the page can tell which project card it is next to. */
+export const fishYBus = createBus(0);

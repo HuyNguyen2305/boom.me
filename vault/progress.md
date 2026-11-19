@@ -14,6 +14,7 @@ Current state of the portfolio build. Update at the end of every session.
 - [x] Round moon, night clouds, buoy; background sea life by depth (minnows, tang, lantern fish, jellyfish, shark, whale, octopus, hordes); tilt fixed (head-down when diving); content column shifted 6rem left
 - [x] Hint above the fish (fades after first use), fish swims both ways, hero+About fit the first screen, sea life lives per layer (incl. a diver on Skills), varied coral floor, pixel waves, hook on the line, buoy with submerged float
 - [x] Dev badge off, medium varied corals (branching, whip, table, bubble, brain, tube, anemone), sunken wreck on the right of the floor, sharks/whales roam all layers but the bottom, sky+hero+About fill the first screen
+- [x] Fish moves freely between two vertical limits (30%/66% of the screen) and only scrolls the page at a limit; smoother main fish (no white eye); longer whale belly
 - [x] pnpm build, typecheck and test all pass
 
 ## In progress

@@ -16,35 +16,107 @@ const setter = (g: string[][]) => (c: number, r: number, v: string) => {
   if (r >= 0 && r < g.length && c >= 0 && c < g[0]!.length) g[r]![c] = v;
 };
 
-/** Shark / whale: a tapered body with a forked tail; two frames so the tail beats. */
-function spindle(w: number, h: number, dorsal: boolean, tailDy: number): string[] {
-  const bw = w - 6;
-  const cy = 4 + h / 2;
-  const g = grid(w, h + 8);
+/** Shark: long and slim, pointed snout, gill slits, two dorsal fins, swept pectorals, forked tail (upper lobe longer). */
+function shark(tailDy: number): string[] {
+  const W = 50;
+  const H = 26;
+  const bw = 40;
+  const cy = 13;
+  const g = grid(W, H);
   const set = setter(g);
   const half = (c: number) => {
     const t = c / (bw - 1);
-    const u = t < 0.38 ? (0.38 - t) / 0.38 : (t - 0.38) / 0.62;
-    return (h / 2) * Math.sqrt(Math.max(0, 1 - u * u));
+    const u = t < 0.34 ? (0.34 - t) / 0.34 : (t - 0.34) / 0.66;
+    return Math.max(c > bw * 0.6 ? 0.9 : 0, 4.3 * Math.pow(Math.max(0, 1 - u * u), 0.7));
   };
+  // tail first so the body overlaps its root; the upper lobe is longer than the lower
   const tc = cy + tailDy;
-  for (let c = bw - 1; c < w; c++) {
-    const k = c - (bw - 1);
-    const th = (h / 2) * 0.25 + k * (h / 2) * 0.16;
-    const notch = k >= 3 ? (k - 2) * 0.9 : 0;
-    for (let r = Math.round(tc - th); r <= Math.round(tc + th); r++) if (Math.abs(r - tc) >= notch) set(c, r, "F");
+  for (let k = 0; k < W - bw + 2; k++) {
+    const c = bw - 2 + k;
+    const up = 1.5 + k * 1.0;
+    const down = 1.2 + k * 0.45;
+    const notch = k >= 4 ? (k - 3) * 0.45 : 0;
+    for (let r = Math.round(tc - up); r <= Math.round(tc + down); r++) if (r < tc - notch || r > tc + notch) set(c, r, "D");
+  }
+  // body: slate back, lighter flank, white belly, with a wavy countershading line
+  for (let c = 0; c < bw; c++) {
+    const hh = half(c);
+    for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {
+      const frac = (r - cy) / Math.max(hh, 0.5);
+      set(c, r, frac > 0.35 + Math.sin(c * 0.45) * 0.08 ? "W" : frac > -0.1 ? "g" : "G");
+    }
+    if (c > 10 && c < bw - 4 && c % 2 === 0) set(c, Math.round(cy - 0.5), "l"); // lateral line
+  }
+  for (let k = 0; k < 4; k++) for (let r = cy - 2; r <= cy + 1; r++) set(11 + k * 2 - Math.floor((r - (cy - 2)) / 2), r, "D"); // gill slits
+  set(5, cy - 1, "E");
+  for (let c = 1; c <= 8; c++) set(c, Math.round(cy + 1.7 - c * 0.12), "D"); // mouth
+  [2, 4, 6].forEach((c) => set(c, Math.round(cy + 2.6 - c * 0.12), "W")); // teeth
+  // first dorsal: tall and swept back
+  [0, 1, 2, 3, 4, 5, 6, 4, 2, 0].forEach((h, i) => {
+    const c = 15 + i;
+    for (let r = Math.round(cy - half(c)) - h; r <= Math.round(cy - half(c)); r++) set(c, r, "D");
+  });
+  // second dorsal and anal fin
+  [1, 2, 2, 1].forEach((h, i) => {
+    for (let r = Math.round(cy - half(29 + i)) - h; r <= Math.round(cy - half(29 + i)); r++) set(29 + i, r, "D");
+    for (let r = Math.round(cy + half(30 + i)); r <= Math.round(cy + half(30 + i)) + h; r++) set(30 + i, r, "D");
+  });
+  // pectoral fin sweeps back under the body
+  for (let i = 0; i < 9; i++) {
+    const c = 13 + i;
+    const len = Math.max(0, Math.round(6 - i * 0.75));
+    for (let k = 1; k <= len; k++) set(c + Math.floor(k * 0.5), Math.round(cy + half(c)) + k, "D");
+  }
+  return g.map((row) => row.join(""));
+}
+
+/** Whale: big rounded head with tubercles, throat grooves, long banded flipper, small dorsal, flukes. */
+function whale(tailDy: number): string[] {
+  const W = 70;
+  const H = 34;
+  const bw = 56;
+  const cy = 14;
+  const g = grid(W, H);
+  const set = setter(g);
+  const half = (c: number) => {
+    const t = c / (bw - 1);
+    const u = t < 0.3 ? (0.3 - t) / 0.3 : (t - 0.3) / 0.7;
+    return Math.max(c > bw * 0.6 ? 1.6 : 0, 10 * Math.pow(Math.max(0, 1 - u * u), 0.6));
+  };
+  // flukes: a crescent that flaps by moving its centre
+  const tc = cy + tailDy * 2;
+  for (let k = 0; k < W - bw + 2; k++) {
+    const c = bw - 2 + k;
+    const e = 1.6 + k * 0.75;
+    const notch = k >= 7 ? (k - 6) * 0.7 : 0;
+    for (let r = Math.round(tc - e * 1.15); r <= Math.round(tc + e * 0.85); r++) if (Math.abs(r - tc) >= notch) set(c, r, k > 11 ? "F" : "f");
   }
   for (let c = 0; c < bw; c++) {
     const hh = half(c);
-    for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) set(c, r, r > cy + hh * 0.3 ? "W" : "G");
+    for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {
+      const frac = (r - cy) / Math.max(hh, 0.5);
+      let v = frac > 0.3 ? "W" : frac > -0.35 ? "g" : "G";
+      if (v === "W" && c > 6 && c < 36 && c < bw * 0.62 && (r + c * 0) % 2 === 0 && frac > 0.4) v = "w"; // throat grooves
+      set(c, r, v);
+    }
   }
-  if (dorsal) {
-    const c0 = Math.round(bw * 0.4);
-    for (let i = 0; i < 5; i++) for (let k = 1; k <= 5 - i; k++) set(c0 + i, Math.round(cy - half(c0 + i)) - k, "D");
+  for (let c = 0; c <= 22; c++) set(c, Math.round(cy + 2 + c * 0.1), "D"); // long mouth line
+  [[9, cy + 1], [10, cy + 1], [8, cy], [9, cy], [10, cy]].forEach(([c, r], i) => set(c!, r!, i < 2 ? "E" : "D")); // eye and lid
+  set(15, Math.round(cy - half(15)) - 1, "D");
+  set(16, Math.round(cy - half(16)) - 1, "D"); // blowhole
+  [2, 4, 6].forEach((c) => set(c, Math.round(cy - half(c)), "B")); // snout tubercles
+  [3, 5].forEach((c) => set(c, Math.round(cy + half(c)), "B"));
+  [[22, 11], [28, 12], [33, 10], [38, 12], [43, 11], [26, 15], [47, 13]].forEach(([c, r]) => set(c!, r!, "B")); // scars
+  // long pectoral flipper, banded
+  const base = Math.round(cy + half(18)) - 2;
+  for (let i = 0; i < 14; i++) {
+    const x = 18 + Math.round(i * 1.1);
+    const y = base + Math.round(i * 0.55);
+    for (let k = 0; k < 3; k++) set(x, y + k, k === 0 ? "F" : "f");
   }
-  const c1 = Math.round(bw * 0.33);
-  for (let i = 0; i < 4; i++) for (let k = 1; k <= 4 - i; k++) set(c1 + i, Math.round(cy + half(c1 + i)) + k, "D");
-  set(Math.round(bw * 0.1), Math.round(cy - h * 0.12), "E");
+  [0, 1, 2, 3, 2, 1].forEach((h, i) => {
+    for (let r = Math.round(cy - half(40 + i)) - h; r <= Math.round(cy - half(40 + i)); r++) set(40 + i, r, "G"); // small dorsal
+  });
   return g.map((row) => row.join(""));
 }
 
@@ -98,8 +170,8 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   minnow: { frames: [FISH], pal: { B: "#3cc6c0", b: "#8fe3df", D: "#2a9a95", F: "#2a9a95", E: "#071c24", G: "#8fe3df" }, alpha: 0.42, speed: 70 },
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
-  shark: { frames: [spindle(32, 10, true, -1), spindle(32, 10, true, 1)], pal: { G: "#5d7482", W: "#aab9c0", D: "#44606e", F: "#44606e", E: "#0f1720" }, alpha: 0.36, speed: 90 },
-  whale: { frames: [spindle(44, 16, false, -1), spindle(44, 16, false, 1)], pal: { G: "#3f6a8a", W: "#8aa9bf", D: "#2f536e", F: "#2f536e", E: "#0f1720" }, alpha: 0.3, speed: 45 },
+  shark: { frames: [shark(-1), shark(1)], pal: { G: "#4a6172", g: "#7893a5", W: "#c4d2da", D: "#33495a", l: "#3f5666", E: "#0b1116" }, alpha: 0.4, speed: 95 },
+  whale: { frames: [whale(-1), whale(1)], pal: { G: "#365d7c", g: "#4f7b9c", W: "#a9c4d4", w: "#86a6bb", D: "#26445c", f: "#3f6a8a", F: "#6a95b2", E: "#0b1116", B: "#9fb4bf" }, alpha: 0.34, speed: 40 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

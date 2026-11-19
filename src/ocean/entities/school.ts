@@ -27,17 +27,19 @@ function outline(g: string[][], v = "O") {
   edge.forEach(([c, r]) => (g[r]![c] = v));
 }
 
-/** No black line: edge cells get a lighter blue on top and a deeper blue elsewhere, so the silhouette stays readable. */
+const RAMP = "abcdefg"; // the whale's blues, from the deepest (a) to near-white (g)
+
+/** No black line: an edge cell steps one shade along the blue ramp: lighter on top, deeper on the sides and underneath. */
 function softRim(rows: string[]): string[] {
   const at = (r: number, c: number) => rows[r]?.[c] ?? ".";
   return rows.map((row, r) =>
     [...row]
       .map((v, c) => {
-        if (v === ".") return v;
-        if (at(r - 1, c) === "." && (v === "G" || v === "d")) return "h"; // light along the top edge
-        const open = at(r + 1, c) === "." || at(r, c - 1) === "." || at(r, c + 1) === ".";
-        if (!open) return v;
-        return v === "W" || v === "w" ? "p" : v === "E" ? v : "b"; // deeper blue (slate for the pale belly) on the other edges
+        const i = RAMP.indexOf(v);
+        if (i < 0) return v;
+        if (at(r - 1, c) === ".") return RAMP[Math.min(6, i + 1)]!;
+        if (at(r + 1, c) === "." || at(r, c - 1) === "." || at(r, c + 1) === ".") return RAMP[Math.max(0, i - 1)]!;
+        return v;
       })
       .join(""),
   );
@@ -51,7 +53,7 @@ function lobe(set: (c: number, r: number, v: string) => void, x: number, y: numb
     const w = 0.5 + wid * Math.sin(Math.PI * Math.pow(k / len, 0.75));
     const cx = x + ux * k;
     const cy = y + uy * k - (k * k) / len * 0.12; // tips curl up
-    for (let j = -w; j <= w; j += 0.25) set(cx - uy * j, cy + ux * j, j < -w * 0.3 ? "h" : "G");
+    for (let j = -w; j <= w; j += 0.25) set(cx - uy * j, cy + ux * j, j < -w * 0.3 ? "c" : "b");
   }
 }
 
@@ -151,8 +153,9 @@ function shark(betaDeg: number): string[] {
 
 /**
  * The whale drawn straight, as a sperm whale (from the user's sketch): a huge blunt box of a head with rounded corners,
- * a flat back running all the way to the tail, a belly that sags under the head and then climbs to a thin tail, a short
- * rounded flipper, and small flukes. Head on the left. Foreshortening shrinks the flukes as the tail passes level.
+ * a flat back running all the way to the tail, a belly that sags under the head and then climbs to a thin tail, small
+ * flukes. Head on the left. No lines or patterns: just a smooth ramp of blues from the deepest on the back to near-white
+ * on the belly. Foreshortening shrinks the flukes as the tail passes level.
  */
 function whaleSource(fluke: number) {
   const W = 152;
@@ -175,18 +178,14 @@ function whaleSource(fluke: number) {
     }
     for (let y = Math.round(t); y <= Math.round(b); y++) {
       const fr = (y - t) / Math.max(1, b - t); // 0 at the back, 1 at the belly
-      let v = "G";
-      if (fr < 0.16) v = "h"; // light along the flat back
-      else if (x > 80 && fr > 0.55) v = "d"; // darker underside of the tail
-      const edge = 0.64 + Math.sin(x * 0.9) * 0.05;
-      if (x < 116 && fr > edge) v = (x * 7 + y * 3) % 11 === 0 ? "w" : "W"; // long pale belly with a jagged edge
-      else if (x < 116 && fr > edge - 0.07) v = "d"; // dark seam above it
-      put(x, y, v);
+      const f = fr - Math.max(0, x - 84) * 0.011; // toward the tail the white belly eases back into blue, with no vertical seams
+      const step = f < 0.1 ? 0 : f < 0.28 ? 1 : f < 0.44 ? 2 : f < 0.58 ? 3 : f < 0.72 ? 4 : f < 0.86 ? 5 : 6;
+      put(x, y, RAMP[step]!);
     }
   }
-  for (let x = x0 + 3; x <= 52; x++) set(x, top + 28 + x * 0.03, "d"); // the long, narrow mouth under the head
   [[14, top + 14], [15, top + 14], [14, top + 15], [15, top + 15]].forEach(([x, y]) => set(x!, y!, "E")); // small eye
-  const flipper = { x: 70, y: top + thick(70) - 3 }; // drawn after the bend so it keeps pointing down and back
+  // the flipper joins the blue flank behind the head (not the pale belly); it is drawn after the bend
+  const flipper = { x: 64, y: top + thick(64) * 0.45 };
   return { g, cy: top + thick(xe) / 2, flipper };
 }
 
@@ -195,17 +194,17 @@ function whale(betaDeg: number): string[] {
   const [x0, len, oy] = [56, 84, 76];
   const { g, cy, flipper } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
   const out = bend(g, cy, x0, len, betaDeg, 170, 132, oy, null).map((r) => [...r]);
-  // the small flipper stays attached to the belly where the bend carries it, but is not itself bent
+  // the flipper stays attached to the flank where the bend carries it, but is not itself bent
   const k = ((betaDeg * Math.PI) / 180) / len;
   const [s, d] = [flipper.x - x0, flipper.y - cy];
   const nx = Math.abs(k) < 1e-6 ? flipper.x : x0 + Math.sin(k * s) / k + d * Math.sin(k * s);
   const ny = Math.abs(k) < 1e-6 ? oy + d : oy + (Math.cos(k * s) - 1) / k + d * Math.cos(k * s);
-  for (let i = 0; i <= 13; i++) {
+  for (let i = 0; i <= 15; i++) {
     const cx = nx + i * 0.9;
-    const half = 1 + 3.2 * (1 - Math.pow(i / 13, 2.4));
+    const half = 1.5 + 3.4 * (1 - Math.pow(i / 15, 2.2));
     for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) {
       const row = out[Math.round(ny + i)];
-      if (row && x >= 0 && x < row.length) row[x] = x <= cx - half + 1 ? "h" : x >= cx + half - 1 ? "d" : "G";
+      if (row && x >= 0 && x < row.length) row[x] = x <= cx - half + 1 ? "c" : x >= cx + half - 1 ? "a" : "b"; // blue, lighter on its leading edge
     }
   }
   return softRim(out.map((r) => r.join("")));
@@ -262,7 +261,7 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
   shark: { frames: [10, 0, -10, 0].map(shark), pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [44, 24, 4, -18, -30, -18, 4, 24].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", b: "#244f98", W: "#8f9db3", w: "#c3cfe2", p: "#7385a3", E: "#12306c", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
+  whale: { frames: [44, 24, 4, -18, -30, -18, 4, 24].map(whale), pal: { a: "#2c61b8", b: "#3d77cc", c: "#5a8fd8", d: "#7ba6e0", e: "#a3c2ec", f: "#c9dbf3", g: "#e8f0fb", E: "#12306c" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

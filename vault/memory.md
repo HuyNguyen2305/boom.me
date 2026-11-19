@@ -31,3 +31,4 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Whale design (user sketch): sperm whale. Big blunt box head with rounded corners, flat back to the tail, belly sags under the head then climbs to a thin tail, short paddle flipper, small flukes; head on the left in the sprite. Drawn straight in school.ts whaleSource(), bent by bend().
 - Whale has no black outline: shades of blue only (softRim in school.ts). Shark keeps its outline.
 - Whale flipper (user feedback): small, well behind the head on the lower belly, pointing down and back, never under the mouth; drawn after the bend so it does not bend with the tail.
+- Whale colouring (user feedback): no zig-zags, dotted or straight lines. One smooth ramp of blues (deepest on the back to near-white on the belly); the flipper joins the blue flank, not the pale belly.

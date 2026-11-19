@@ -16,139 +16,139 @@ const setter = (g: string[][]) => (c: number, r: number, v: string) => {
   if (r >= 0 && r < g.length && c >= 0 && c < g[0]!.length) g[r]![c] = v;
 };
 
-/** Shark at 2px (76 x 40 cells): slim, with gill slits, lateral line, eye, five fins and a heterocercal tail. */
+/** Dark outline around every filled cell, as in classic pixel sprites. */
+function outline(g: string[][], v = "O") {
+  const edge: [number, number][] = [];
+  g.forEach((row, r) =>
+    row.forEach((cell, c) => {
+      if (cell === "." && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dc, dr]) => (g[r + dr!]?.[c + dc!] ?? ".") !== ".")) edge.push([c, r]);
+    }),
+  );
+  edge.forEach(([c, r]) => (g[r]![c] = v));
+}
+
+/** Fills a leaf-shaped lobe along a direction (used for the whale's flukes). */
+function lobe(set: (c: number, r: number, v: string) => void, x: number, y: number, dx: number, dy: number, len: number, wid: number) {
+  const n = Math.hypot(dx, dy);
+  const [ux, uy] = [dx / n, dy / n];
+  for (let k = 0; k <= len; k++) {
+    const w = 0.5 + wid * Math.sin(Math.PI * Math.pow(k / len, 0.75));
+    const cx = x + ux * k;
+    const cy = y + uy * k - (k * k) / len * 0.12; // tips curl up
+    for (let j = -w; j <= w; j += 0.5) set(Math.round(cx - uy * j), Math.round(cy + ux * j), j < -w * 0.3 ? "h" : "G");
+  }
+}
+
+/** Shark at 2px: outlined torpedo with a pointed snout, white belly, gill slits, tall dorsal and an upright crescent tail. */
 function shark(tailDy: number): string[] {
-  const W = 76;
-  const H = 40;
-  const bw = 60;
-  const cy = 20;
+  const W = 80;
+  const H = 46;
+  const bw = 58;
+  const cy = 24;
   const g = grid(W, H);
   const set = setter(g);
   const half = (c: number) => {
-    const t = c / (bw - 1);
-    const u = t < 0.34 ? (0.34 - t) / 0.34 : (t - 0.34) / 0.66;
-    return Math.max(c > bw * 0.6 ? 1.2 : 0, 6.4 * Math.pow(Math.max(0, 1 - u * u), 0.7));
+    const t = c / bw;
+    const h = t < 0.38 ? 7.2 * Math.pow(t / 0.38, 0.8) : 7.2 * Math.pow(Math.max(0, 1 - (t - 0.38) / 0.62), 1.15);
+    return Math.max(c > bw * 0.7 ? 1.3 : 0, h);
   };
-  // tail first so the body overlaps its root: upper lobe longer, lighter trailing edge
+  // tail: one fat upright crescent polygon. Tall upper lobe, short lower lobe, concave trailing edge
   const tc = cy + tailDy;
-  for (let k = 0; k < W - bw + 3; k++) {
-    const c = bw - 3 + k;
-    const up = 2 + k * 0.95;
-    const down = 1.6 + k * 0.42;
-    const notch = k >= 6 ? (k - 5) * 0.45 : 0;
-    for (let r = Math.round(tc - up); r <= Math.round(tc + down); r++)
-      if (r < tc - notch || r > tc + notch) set(c, r, c === W - 1 || r === Math.round(tc - up) ? "g" : "D");
-  }
-  // body: slate back, lighter flank, white belly; a dithered seam between the tones
+  const poly: [number, number][] = [[bw - 3, tc - 1], [bw + 14, tc - 22], [bw + 8, tc - 5], [bw + 12, tc + 11], [bw - 3, tc + 2]];
+  const inside = (x: number, y: number) => {
+    let hit = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i]!;
+      const [xj, yj] = poly[j]!;
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+    }
+    return hit;
+  };
+  for (let r = tc - 23; r <= tc + 13; r++) for (let c = bw - 4; c < W; c++) if (inside(c + 0.5, r + 0.5)) set(c, r, r < tc - 6 ? "g" : "G");
+  // body: slate back, white belly with a pale streak
   for (let c = 0; c < bw; c++) {
     const hh = half(c);
     for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {
       const frac = (r - cy) / Math.max(hh, 0.5);
-      const belly = 0.38 + Math.sin(c * 0.4) * 0.07;
-      let v = frac > belly ? "W" : frac > -0.1 ? "g" : "G";
-      if (Math.abs(frac + 0.1) < 0.09 && (c + r) % 2 === 0) v = v === "g" ? "G" : "g";
-      if (Math.abs(frac - belly) < 0.08 && (c + r) % 2 === 0) v = v === "W" ? "g" : "W";
+      const belly = 0.22 + Math.sin(c * 0.35) * 0.1;
+      let v = frac > belly ? "W" : frac > -0.45 ? "g" : "G";
+      if (v === "W" && frac > belly + 0.35 && c > 26 && c < 50 && (c + r) % 3 === 0) v = "w";
       set(c, r, v);
     }
-    if (c > 16 && c < bw - 6 && c % 2 === 0) set(c, Math.round(cy - 0.8), "l"); // lateral line
   }
-  for (let k = 0; k < 5; k++) for (let r = cy - 3; r <= cy + 2; r++) set(Math.round(17 + k * 2.6) - Math.floor((r - (cy - 3)) / 3), r, "D"); // five gill slits
-  [[8, cy - 2], [9, cy - 2], [8, cy - 1], [9, cy - 1]].forEach(([c, r], i) => set(c!, r!, i === 0 ? "W" : "E")); // eye with a glint
-  set(4, cy - 2, "D"); // nostril
-  for (let c = 2; c <= 12; c++) set(c, Math.round(cy + 2.4 - c * 0.16), "D"); // mouth
-  // first dorsal: tall and swept back, with a lighter leading edge
-  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 6, 3, 1].forEach((h, i) => {
-    const c = 23 + i;
-    const base = Math.round(cy - half(c));
-    for (let r = base - h; r <= base; r++) set(c, r, r === base - h ? "g" : "D");
-  });
-  [1, 2, 3, 3, 2, 1].forEach((h, i) => {
-    const t = Math.round(cy - half(44 + i));
-    for (let r = t - h; r <= t; r++) set(44 + i, r, "D"); // second dorsal
-    const b = Math.round(cy + half(46 + i));
-    for (let r = b; r <= b + h; r++) set(46 + i, r, "D"); // anal fin
-  });
-  [1, 2, 2, 1].forEach((h, i) => {
-    const b = Math.round(cy + half(34 + i));
-    for (let r = b; r <= b + h; r++) set(34 + i, r, "D"); // pelvic fin
-  });
-  for (let i = 0; i < 14; i++) {
-    const c = 20 + i;
-    const len = Math.max(0, Math.round(10 - i * 0.75));
-    for (let k = 1; k <= len; k++) set(c + Math.floor(k * 0.5), Math.round(cy + half(c)) + k, k > len - 2 ? "g" : "D"); // pectoral
+  // tall dorsal triangle, upright back edge
+  for (let c = 24; c <= 36; c++) {
+    const h = c <= 31 ? ((c - 24) / 7) * 13 : Math.max(0, ((36 - c) / 5) * 13);
+    for (let r = Math.round(cy - half(c) - h); r <= Math.round(cy - half(c)); r++) set(c, r, c < 28 && r < cy - half(c) - h + 2 ? "g" : "G");
   }
-  for (let i = 0; i < 14; i++) set(10 + ((i * 7) % 34), cy - 4 + ((i * 3) % 6), "l"); // speckles
+  [0, 1, 2, 3, 2, 1].forEach((h, i) => {
+    const t = Math.round(cy - half(46 + i));
+    for (let r = t - h; r <= t; r++) set(46 + i, r, "G"); // second dorsal
+    const b = Math.round(cy + half(48 + i));
+    for (let r = b; r <= b + h; r++) set(48 + i, r, "G"); // anal fin
+  });
+  [0, 1, 2, 3, 4, 3, 1].forEach((h, i) => {
+    const b = Math.round(cy + half(36 + i));
+    for (let r = b; r <= b + h; r++) set(36 + i, r, "G"); // pelvic fin
+  });
+  for (let i = 0; i < 12; i++) {
+    const c = 21 + i;
+    const len = Math.max(0, Math.round(7 - i * 0.7));
+    for (let k = 0; k <= len; k++) set(c + Math.floor(k * 0.7), Math.round(cy + half(c)) + k, "g"); // swept pectoral fin
+  }
+  for (let k = 0; k < 4; k++) for (let r = cy - 4; r <= cy + 1; r++) set(21 + k * 2 - (r > cy - 2 ? 1 : 0), r, "D"); // gill slits
+  [[8, cy - 2], [9, cy - 2], [8, cy - 1], [9, cy - 1]].forEach(([c, r]) => set(c!, r!, "E")); // eye
+  for (let c = 3; c <= 11; c++) set(c, Math.round(cy + 2.5 - c * 0.12), "D"); // mouth
+  outline(g);
   return g.map((row) => row.join(""));
 }
 
-/** Whale at 2px (105 x 52 cells): tubercles, pleats, scars, barnacles, a long banded flipper and notched flukes. */
+/** Whale at 2px: chunky outlined body, big blunt head, pale throat, tiny flipper and a tail that curves up into flukes. */
 function whale(tailDy: number): string[] {
-  const W = 112;
-  const H = 52;
-  const bw = 84;
-  const cy = 21;
+  const W = 100;
+  const H = 58;
+  const cx = 36;
+  const cy = 34;
   const g = grid(W, H);
   const set = setter(g);
-  const half = (c: number) => {
-    const t = c / (bw - 1);
-    const u = t < 0.3 ? (0.3 - t) / 0.3 : (t - 0.3) / 0.7;
-    return Math.max(c > bw * 0.6 ? 2.4 : 0, 15 * Math.pow(Math.max(0, 1 - u * u), 0.6));
-  };
-  // tail: the stock curves up, and the flukes spread left and right from its tip (horizontal, as a real whale's are)
-  const fx = bw + 8;
-  const fy = cy - 14 + tailDy * 3; // the beat moves the fluke tip
-  for (let i = 0; i <= 60; i++) {
-    const u = i / 60;
-    const x = (1 - u) ** 2 * (bw - 4) + 2 * (1 - u) * u * (bw + 14) + u * u * fx;
-    const y = (1 - u) ** 2 * cy + 2 * (1 - u) * u * (cy - 1) + u * u * fy;
-    const r = 2.6 - u * 0.8; // the stock thins toward the flukes
-    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (dx * dx + dy * dy <= r * r) set(Math.round(x + dx), Math.round(y + dy), dy < 0 ? "G" : "g");
+  // tail stock: a thick S-curve rising from the rear of the body to the flukes
+  const fx = 84;
+  const fy = 14 + tailDy * 2;
+  for (let i = 0; i <= 80; i++) {
+    const u = i / 80;
+    const x = (1 - u) ** 2 * 62 + 2 * (1 - u) * u * 88 + u * u * fx;
+    const y = (1 - u) ** 2 * (cy + 1) + 2 * (1 - u) * u * (cy + 4) + u * u * (fy + 6);
+    const r = 4.6 - u * 1.8;
+    for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) if (dx * dx + dy * dy <= r * r) set(Math.round(x + dx), Math.round(y + dy), dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
   }
-  for (const side of [-1, 1]) {
-    for (let k = 1; k <= 19; k++) {
-      const h = 0.6 + 3.4 * Math.sin(Math.PI * Math.pow(k / 19, 0.8)); // a leaf-shaped lobe
-      const lift = (k * k) / 19 * 0.14; // the tips curve up
-      for (let r = Math.round(fy - lift - h * 0.45); r <= Math.round(fy - lift + h); r++)
-        set(fx + side * k, r, (k % 4 === 0 && r === Math.round(fy - lift)) || k === 19 ? "F" : r === Math.round(fy - lift - h * 0.45) ? "F" : "f");
-    }
-  }
-  set(fx, fy, "D"); // the notch between the flukes
-  set(fx, fy + 1, "D");
-  for (let c = 0; c < bw; c++) {
-    const hh = half(c);
-    for (let r = Math.round(cy - hh); r <= Math.round(cy + hh); r++) {
-      const frac = (r - cy) / Math.max(hh, 0.5);
-      let v = frac > 0.3 ? "W" : frac > -0.35 ? "g" : "G";
-      if (v === "W" && c > 10 && c < 54 && frac > 0.45 && r % 2 === 0 && c % 7 !== 0) v = "w"; // throat pleats
-      if (Math.abs(frac + 0.35) < 0.07 && (c + r) % 2 === 0) v = v === "g" ? "G" : "g"; // dithered seam
+  lobe(set, fx, fy + 2, -0.9, -0.5, 11, 3.2); // smaller left fluke
+  lobe(set, fx, fy + 2, 1, -0.25, 15, 3.6); // larger right fluke
+  // body: a boxy superellipse so the head is big and blunt
+  const rx = 35;
+  const ry = 16;
+  for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) {
+      const dx = (c - cx) / rx;
+      const dy = (r - cy) / ry;
+      if (Math.abs(dx) ** 3.2 + Math.abs(dy) ** 2.2 > 1) continue;
+      let v = dy < -0.55 ? "h" : "G";
+      if (dx * 0.9 + dy * 0.6 > 0.62) v = "d"; // shaded rear flank, a soft diagonal
+      const throat = cy + 4 + Math.sin(c * 0.9) * 1.1 + (c - 4) * 0.05 + Math.max(0, c - 36) * 0.85; // jagged pale throat, rising into the flank toward the tail
+      if (r > throat) v = (c * 7 + r * 3) % 11 === 0 ? "w" : "W";
+      else if (r > throat - 2 && r <= throat && c < 62) v = "d"; // dark seam above the throat
       set(c, r, v);
     }
   }
-  for (let c = 0; c <= 34; c++) set(c, Math.round(cy + 3 + c * 0.11), "D"); // long mouth line
-  for (let c = 12; c <= 17; c++) set(c, cy, "D"); // eyelid
-  [[13, cy + 1], [14, cy + 1], [15, cy + 1], [13, cy + 2], [14, cy + 2], [15, cy + 2]].forEach(([c, r], i) => set(c!, r!, i === 0 ? "W" : "E"));
-  [23, 24, 25].forEach((c) => set(c, Math.round(cy - half(c)) - 1, "D")); // blowhole
-  [2, 5, 8, 11, 14, 17].forEach((c) => set(c, Math.round(cy - half(c)), "B")); // snout tubercles
-  [4, 8, 12].forEach((c) => set(c, Math.round(cy + half(c)), "B")); // chin
-  for (let i = 0; i < 16; i++) {
-    const c = 30 + ((i * 11) % 44);
-    const r = cy - 6 + ((i * 5) % 11);
-    set(c, r, "B");
-    if (i % 3 === 0) set(c + 1, r, "w"); // scars
+  [[13, 29], [14, 29], [13, 30], [14, 30], [13, 31], [14, 31]].forEach(([c, r]) => set(c!, r!, "E")); // eye
+  [[15, 29], [15, 30], [15, 31]].forEach(([c, r]) => set(c!, r!, "e"));
+  // short flipper, light along its lower edge
+  for (let i = 0; i < 12; i++) {
+    const x = 38 + Math.round(i * 0.8);
+    const y = cy + 12 + i;
+    const w = Math.max(2, 5 - Math.floor(i / 3));
+    for (let k = 0; k < w; k++) set(x + k, y, k === w - 1 ? "h" : "G");
   }
-  // long flipper: scalloped leading edge, pale tip, a few barnacles
-  const base = Math.round(cy + half(27)) - 3;
-  for (let i = 0; i < 25; i++) {
-    const x = 27 + Math.round(i * 1.1);
-    const y = base + Math.round(i * 0.58);
-    for (let k = 0; k < 4; k++) set(x, y + k, k === 0 ? "F" : "f");
-    if (i % 4 === 0) set(x, y - 1, "F");
-    if (i % 7 === 3) set(x, y + 4, "B");
-  }
-  [0, 1, 2, 3, 4, 4, 3, 2, 1].forEach((h, i) => {
-    const c = 60 + i;
-    for (let r = Math.round(cy - half(c)) - h; r <= Math.round(cy - half(c)); r++) set(c, r, r === Math.round(cy - half(c)) - h ? "g" : "G"); // dorsal
-  });
+  outline(g);
   return g.map((row) => row.join(""));
 }
 
@@ -202,8 +202,8 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   minnow: { frames: [FISH], pal: { B: "#3cc6c0", b: "#8fe3df", D: "#2a9a95", F: "#2a9a95", E: "#071c24", G: "#8fe3df" }, alpha: 0.42, speed: 70 },
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
-  shark: { frames: [shark(-1), shark(1)], pal: { G: "#4a6172", g: "#7893a5", W: "#c4d2da", D: "#33495a", l: "#3f5666", E: "#0b1116" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [whale(-1), whale(1)], pal: { G: "#365d7c", g: "#4f7b9c", W: "#a9c4d4", w: "#86a6bb", D: "#26445c", f: "#3f6a8a", F: "#6a95b2", E: "#0b1116", B: "#9fb4bf" }, alpha: 0.42, speed: 40, px: 2 },
+  shark: { frames: [shark(-1), shark(1)], pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
+  whale: { frames: [whale(-1), whale(1)], pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

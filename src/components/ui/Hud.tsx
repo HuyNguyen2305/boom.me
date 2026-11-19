@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { depthEvents } from "@/ocean/events";
+import { depthBus } from "@/ocean/events";
 
 export function Hud() {
   const [depth, setDepth] = useState(0);
-  useEffect(() => depthEvents.subscribe(setDepth), []);
+  useEffect(() => depthBus.subscribe(setDepth), []);
   return (
     <div
       aria-hidden

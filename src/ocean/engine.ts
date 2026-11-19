@@ -1,50 +1,80 @@
-import { depthEvents } from "./events";
-import { depthAt, readStops, type Stop } from "./scroll";
+import { drawSurface } from "./entities/boat";
+import { drawSeafloor } from "./entities/seafloor";
+import { createSchool, drawSchool } from "./entities/school";
+import { depthBus, helmBus } from "./events";
+import { createInput } from "./input";
+import { depthAt, readFloor, readStops, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
+import type { World } from "./world";
 
 type Bubble = { x: number; y: number; life: number };
 
 const PX = 6; // one sprite pixel = 6 css pixels (72 x 42 fish)
+const SURFACE_Y = 150; // matches the sky strip height in page.tsx
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
   const ctx = canvas.getContext("2d")!;
+  const input = createInput();
+  const school = createSchool();
+  const bubbles: Bubble[] = [];
   let stops: Stop[] = [];
-  let w = 0;
-  let h = 0;
   let tilt = 0;
   let lastY = scrollY;
+  let swimX = 0; // helm offset from the home lane
   let raf = 0;
-  const bubbles: Bubble[] = [];
+  const world: World = {
+    w: 0, h: 0, t: 0, scrollY: 0, surfaceY: SURFACE_Y, floorY: 0, depth: 0,
+    moving: 0, reduced: opts.reducedMotion, fishX: 0, fishY: 0, facing: 1,
+  };
+
+  function measure() {
+    stops = readStops();
+    world.floorY = readFloor();
+  }
 
   function resize() {
     const dpr = devicePixelRatio || 1;
-    w = innerWidth;
-    h = innerHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
+    world.w = innerWidth;
+    world.h = innerHeight;
+    canvas.width = world.w * dpr;
+    canvas.height = world.h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    stops = readStops();
+    measure();
     frame(0);
   }
 
   function frame(t: number) {
     const vy = scrollY - lastY;
     lastY = scrollY;
-    const moving = Math.min(Math.abs(vy) / 20, 1);
+    world.t = t;
+    world.scrollY = scrollY;
+    world.moving = Math.min(Math.abs(vy) / 20, 1);
+    world.depth = Math.round(depthAt(stops, scrollY + world.h / 2));
+    depthBus.set(world.depth);
+
+    if (helmBus.get() && !opts.reducedMotion) {
+      if (input.held("up")) scrollBy(0, -14);
+      if (input.held("down")) scrollBy(0, 14);
+      const dx = (input.held("right") ? 1 : 0) - (input.held("left") ? 1 : 0);
+      if (dx) world.facing = dx > 0 ? 1 : -1;
+      swimX = Math.max(0, Math.min(world.w - 170, swimX + dx * 5));
+    } else if (swimX > 0) swimX = Math.max(0, swimX - 6); // glide home when helm is off
+
     const target = opts.reducedMotion ? 0 : Math.max(-1, Math.min(1, vy / 20)) * 32; // head-down when diving
     tilt += (target - tilt) * 0.1;
 
-    depthEvents.emit(Math.round(depthAt(stops, scrollY + h / 2)));
+    const narrow = world.w < 640;
+    world.fishX = narrow ? world.w - 50 : 85 + swimX;
+    world.fishY = narrow ? world.h - 70 : world.h * 0.42 + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
 
-    const narrow = w < 640;
-    const fx = narrow ? w - 50 : 85;
-    const fy = narrow ? h - 70 : h * 0.42 + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
-
-    ctx.clearRect(0, 0, w, h);
+    ctx.clearRect(0, 0, world.w, world.h);
+    drawSchool(ctx, world, school);
+    drawSurface(ctx, world);
+    drawSeafloor(ctx, world);
 
     if (!opts.reducedMotion) {
-      if (Math.random() < 0.02 + moving * 0.08) bubbles.push({ x: fx + (FISH_W * PX) / 2, y: fy, life: 1 });
+      if (Math.random() < 0.02 + world.moving * 0.08) bubbles.push({ x: world.fishX + world.facing * 30, y: world.fishY, life: 1 });
       for (let i = bubbles.length - 1; i >= 0; i--) {
         const b = bubbles[i]!;
         b.y -= 0.8;
@@ -58,11 +88,12 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     }
 
     ctx.save();
-    ctx.translate(fx + (FISH_W * PX) / 2, fy + (FISH_H * PX) / 2);
+    ctx.translate(world.fishX, world.fishY);
+    ctx.scale(world.facing, 1);
     ctx.rotate((tilt * Math.PI) / 180);
     ctx.scale(PX, PX);
     ctx.translate(-FISH_W / 2, -FISH_H / 2);
-    drawFish(ctx, !opts.reducedMotion && Math.floor(t / (moving > 0.2 ? 120 : 300)) % 2 === 0);
+    drawFish(ctx, !opts.reducedMotion && Math.floor(t / (world.moving > 0.2 ? 120 : 300)) % 2 === 0);
     ctx.restore();
   }
 
@@ -74,20 +105,22 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     cancelAnimationFrame(raf);
     if (!document.hidden && !opts.reducedMotion) raf = requestAnimationFrame(loop);
   };
+  const onScroll = () => frame(0);
 
   addEventListener("resize", resize);
   document.addEventListener("visibilitychange", onVisibility);
-  // fonts/images can shift section tops after load
-  const ro = new ResizeObserver(() => (stops = readStops()));
+  const ro = new ResizeObserver(measure); // fonts/images can shift section tops after load
   ro.observe(document.body);
   resize();
-  if (opts.reducedMotion) addEventListener("scroll", () => frame(0), { passive: true });
+  if (opts.reducedMotion) addEventListener("scroll", onScroll, { passive: true });
   else raf = requestAnimationFrame(loop);
 
   return () => {
     cancelAnimationFrame(raf);
     ro.disconnect();
+    input.destroy();
     removeEventListener("resize", resize);
+    removeEventListener("scroll", onScroll);
     document.removeEventListener("visibilitychange", onVisibility);
   };
 }

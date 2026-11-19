@@ -3,14 +3,22 @@ export type Stop = { top: number; depth: number };
 // "−10 m" or "−200 m · sea floor" -> 10 / 200 (metres below the surface)
 const parseDepth = (s: string) => Math.abs(parseFloat(s.replace("−", "-")));
 
+const stopEls = () => [...document.querySelectorAll<HTMLElement>("[data-dive-stop]")];
+
 export function readStops(): Stop[] {
-  return [...document.querySelectorAll<HTMLElement>("[data-dive-stop]")].map((el) => ({
+  return stopEls().map((el) => ({
     top: el.getBoundingClientRect().top + scrollY,
     depth: parseDepth(el.dataset.depth ?? "0"),
   }));
 }
 
-/** Depth in metres at the vertical middle of the viewport, interpolated between stops. */
+/** Document y of the bottom of the last stop (the sea floor). */
+export function readFloor(): number {
+  const last = stopEls().at(-1);
+  return last ? last.getBoundingClientRect().bottom + scrollY : document.documentElement.scrollHeight;
+}
+
+/** Depth in metres at document y, interpolated between stops. */
 export function depthAt(stops: Stop[], y: number): number {
   const first = stops[0];
   const lastStop = stops[stops.length - 1];

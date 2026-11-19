@@ -1,16 +1,19 @@
-type Listener = (depth: number) => void;
+function createBus<T>(initial: T) {
+  const listeners = new Set<(v: T) => void>();
+  let value = initial;
+  return {
+    get: () => value,
+    set(v: T) {
+      value = v;
+      listeners.forEach((l) => l(v));
+    },
+    subscribe(l: (v: T) => void) {
+      listeners.add(l);
+      l(value);
+      return () => void listeners.delete(l);
+    },
+  };
+}
 
-const listeners = new Set<Listener>();
-let last = 0;
-
-export const depthEvents = {
-  emit(depth: number) {
-    last = depth;
-    listeners.forEach((l) => l(depth));
-  },
-  subscribe(l: Listener) {
-    listeners.add(l);
-    l(last);
-    return () => void listeners.delete(l);
-  },
-};
+export const depthBus = createBus(0);
+export const helmBus = createBus(false);

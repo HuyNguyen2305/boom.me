@@ -17,3 +17,16 @@ test("reduced motion still renders a still frame", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("canvas")).toBeAttached();
 });
+
+test("helm mode: W dives, Esc always exits", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 640, "helm is desktop only");
+  await page.goto("/");
+  const helm = page.getByRole("button", { name: /helm/i });
+  await helm.click();
+  await expect(helm).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.down("s");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
+  await page.keyboard.up("s");
+  await page.keyboard.press("Escape");
+  await expect(helm).toHaveAttribute("aria-pressed", "false");
+});

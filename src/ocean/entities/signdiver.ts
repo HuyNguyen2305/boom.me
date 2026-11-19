@@ -11,7 +11,7 @@ const BODY = 10; // column of the body's centre
 const SIGN = { col: 21, rows: 15, w: 36 }; // the board hangs from the pole at col 21, 36 cells wide, 15 rows tall
 
 /** Horizontal centre of the diver's body: 62% across, centred on narrow screens. */
-export const diverX = (width: number) => (width < 640 ? width * 0.5 : width * 0.62);
+const diverX = (width: number) => (width < 640 ? width * 0.5 : width * 0.62);
 /** Left and right edge of the diver and its sign on screen, so the layout can keep corals out of the way. */
 export const diverSpan = (width: number) => [diverX(width) - 44, diverX(width) + 32 + SIGN.w * PX + 8] as const;
 

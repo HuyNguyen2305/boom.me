@@ -10,6 +10,7 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin", "vietnamese"], variable: "
 export const metadata: Metadata = {
   title: `${profile.name} · ${profile.role}`,
   description: profile.intro,
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

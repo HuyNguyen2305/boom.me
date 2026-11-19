@@ -90,16 +90,18 @@ dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
 }
 
 /* Skills: icons drift right to left, fading in and out at the edges. The track holds the list twice, so -50% loops it. */
-.skills-fade {
+.skills-bleed {
   /* full viewport width: pull back to the viewport's left edge, mirroring .column's left edge */
   --col-left: 1rem;
   width: 100vw; margin-left: calc(-1 * var(--col-left));
   position: relative; z-index: 20; /* above the ocean canvas (z-10) so fish swim behind the boxes */
+}
+.skills-fade {
   overflow: hidden;
   mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
 }
-@media (min-width: 40rem) { .skills-fade { --col-left: 1.5rem; } }
-@media (min-width: 80rem) { .skills-fade { --col-left: calc(max(0rem, (100vw - 80rem) / 2) + 1.5rem); } }
+@media (min-width: 40rem) { .skills-bleed { --col-left: 1.5rem; } }
+@media (min-width: 80rem) { .skills-bleed { --col-left: calc(max(0rem, (100vw - 80rem) / 2) + 1.5rem); } }
 .skills-marquee { display: flex; flex-wrap: wrap; gap: 1rem; }
 .skills-label {
   flex-shrink: 0; align-self: center; writing-mode: vertical-rl; transform: rotate(180deg);

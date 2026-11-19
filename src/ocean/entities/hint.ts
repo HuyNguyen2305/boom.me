@@ -1,6 +1,6 @@
 import type { World } from "../world";
 
-const LINES = ["↓ Dive    ↑ Rise", "←  →  Swim", "E   Open a project"];
+const LINES = ["↓ Dive    ↑ Rise", "←  →  Swim", "E   Open a work"];
 
 /** Controls hint floating just above the fish; fades once the visitor has steered or scrolled. */
 export function drawHint(ctx: CanvasRenderingContext2D, w: World, alpha: number) {

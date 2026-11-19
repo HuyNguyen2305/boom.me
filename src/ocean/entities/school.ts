@@ -111,13 +111,14 @@ function plan(depth: number): [Kind, number][] {
   if (depth < 8) return [["minnow", 3], ["horde", 1]];
   if (depth < 30) return [["minnow", 3], ["tang", 1], ["horde", 1]];
   if (depth < 80) return [["tang", 3], ["minnow", 2], ["horde", 1], ["jelly", 1], ["diver", 1]];
-  if (depth < 160) return [["shark", 1], ["jelly", 2], ["lantern", 3], ["tang", 1], ["horde", 1]];
-  return [["whale", 1], ["octopus", 1], ["jelly", 2], ["lantern", 4]];
+  if (depth < 160) return [["jelly", 2], ["lantern", 3], ["tang", 1], ["horde", 1]];
+  return [["octopus", 1], ["jelly", 2], ["lantern", 4]];
 }
 
 type Creature = {
   kind: Kind;
   band: number;
+  roam?: boolean; // swims in a different layer each pass (never the bottom one)
   u: number; // 0..1 height inside its band
   dir: 1 | -1;
   p: number; // 0..1 progress across the screen
@@ -160,6 +161,11 @@ export function createSchool() {
           }
         }
       });
+      // sharks and whales roam: any layer except the bottom one
+      (["shark", "whale"] as const).forEach((kind, k) => {
+        creatures.push({ kind, band: 0, roam: true, u: seed(90 + k, 2), dir: k ? -1 : 1, p: 0.2 + k * 0.4, wait: 0, phase: k * 2 });
+      });
+      creatures.forEach((c) => c.roam && (c.band = Math.floor(seed(c.phase + 90, 3) * Math.max(1, next.length - 1))));
     },
   };
 }
@@ -199,6 +205,7 @@ export function drawSchool(ctx: CanvasRenderingContext2D, w: World, school: Scho
       c.wait = 800 + Math.random() * 4000;
       c.dir = Math.random() > 0.5 ? 1 : -1;
       c.u = Math.random();
+      if (c.roam) c.band = Math.floor(Math.random() * Math.max(1, school.bands.length - 1));
       continue;
     }
 

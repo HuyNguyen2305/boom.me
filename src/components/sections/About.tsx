@@ -2,9 +2,9 @@ import { profile } from "@/content/site";
 import { Chip } from "@/components/ui/Chip";
 import { Section } from "./Section";
 
-export function About() {
+export function About({ className }: { className?: string }) {
   return (
-    <Section id="about" depth="−10 m" title="About" band="bg-depth-1">
+    <Section id="about" depth="−10 m" title="About" band="bg-depth-1" className={className}>
       <div className="grid gap-6 sm:grid-cols-[minmax(0,13rem)_1fr]">
         <div
           aria-hidden

@@ -21,3 +21,5 @@ Durable facts a new session must know. Keep short; delete what stops being true.
 - Pixel size rule (from the user): sprites use 3-4px pixels, never 5-6px. The fish keeps the spec size (72x42) on a finer 24x14 grid at 3px.
 - Sea life is world-space per layer (each section band has its own creatures that swim side to side and fade); never tie creatures to the main fish or to scroll-depth fades.
 - Controls hint is drawn on the canvas above the fish; DOM keeps an sr-only list. Do not add a bottom-centre E hint.
+- next.config devIndicators is false: the user does not want the Next.js dev badge.
+- Corals: medium size (12-20 cells at 3px), varied shapes; no mesh fans. The wreck lives on the right of the sea floor (entities/seafloor.ts).

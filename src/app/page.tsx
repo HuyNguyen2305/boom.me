@@ -22,9 +22,12 @@ export default function Page() {
       <ProjectViewer projects={projects} />
       <main id="main">
         {/* 150px sky strip: the engine draws the moon, fisherman and waves here and reads the surface line from it */}
-        <div aria-hidden data-surface className="h-[150px] bg-abyss" />
-        <Hero />
-        <About />
+        {/* sky, hero and About fill the first screen exactly, so the Skills layer never peeks out below */}
+        <div className="flex min-h-[calc(100svh-3.5rem)] flex-col">
+          <div aria-hidden data-surface className="h-[150px] shrink-0 bg-abyss" />
+          <Hero />
+          <About className="flex-1" />
+        </div>
         <Skills />
         <Projects />
         <Contact />

@@ -68,3 +68,10 @@ test("the fish can swim right as well as left", async ({ page }) => {
   // no assertion on pixels: this guards against the keys throwing or scrolling the page sideways
   expect(await page.evaluate(() => scrollX)).toBe(0);
 });
+
+test("the first screen is only sky, hero and About: Skills starts below the fold", async ({ page }) => {
+  test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
+  await page.goto("/");
+  const skills = await page.locator("#skills").boundingBox();
+  expect(skills!.y).toBeGreaterThanOrEqual(page.viewportSize()!.height - 2);
+});

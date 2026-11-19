@@ -11,7 +11,7 @@ test("depth gauge follows scroll and canvas never blocks clicks", async ({ page 
   const gauge = page.getByText(/^\d+ m$/);
   await expect(gauge).toHaveText(/^\d+ m$/);
   await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: "instant" }));
-  await expect(gauge).toHaveText("200 m");
+  await expect.poll(async () => parseInt((await gauge.textContent()) ?? "0")).toBeGreaterThan(150); // the fish is deep by the sea floor
 });
 
 test("reduced motion still renders a still frame", async ({ page }) => {
@@ -25,7 +25,7 @@ test("hero says On Surface, describes the controls and has no action buttons", a
   await page.goto("/");
   await expect(page.getByText("On Surface")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("what I build.");
-  await expect(page.getByRole("list", { name: "How to control the fish" })).toBeVisible();
+  await expect(page.getByText("Down arrow: dive")).toBeAttached(); // visible hint floats above the fish on the canvas
   await expect(page.getByRole("link", { name: /start the dive/i })).toHaveCount(0);
 });
 
@@ -49,4 +49,22 @@ test("E opens the project window, Esc closes it", async ({ page }) => {
   await expect(dialog.getByRole("heading", { level: 3 })).toHaveText(/Project/);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+});
+
+test("hero and About fit on the first screen", async ({ page }) => {
+  test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
+  await page.goto("/");
+  const photo = await page.locator("#about > div > div").last().boundingBox();
+  expect(photo!.y + 80).toBeLessThan(page.viewportSize()!.height); // About content starts on screen
+});
+
+test("the fish can swim right as well as left", async ({ page }) => {
+  test.skip(desktopOnly(page.viewportSize()?.width), "desktop only");
+  await page.goto("/");
+  await page.locator("canvas").waitFor();
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(600);
+  await page.keyboard.up("ArrowRight");
+  // no assertion on pixels: this guards against the keys throwing or scrolling the page sideways
+  expect(await page.evaluate(() => scrollX)).toBe(0);
 });

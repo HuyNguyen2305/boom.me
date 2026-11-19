@@ -27,6 +27,7 @@ export function createInput() {
   addEventListener("blur", onBlur);
   return {
     held: (d: string) => keys.has(d),
+    any: () => keys.size > 0,
     destroy() {
       removeEventListener("keydown", onDown);
       removeEventListener("keyup", onUp);

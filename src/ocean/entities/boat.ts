@@ -27,6 +27,7 @@ const COLORS = {
   G: "#7fbf7a", g: "#5a9a57", l: "#b07a45", W: "#8a5a33", D: "#6e4526", d: "#4e3019",
 };
 const PX = 3;
+const HOOK = ["...S.", "...S.", "...S.", "...S.", "S..S.", "SS.S.", ".SSS."];
 
 /** Fisherman in a wooden boat with his speech bubble, and the wave line on the surface. */
 export function drawSurface(ctx: CanvasRenderingContext2D, w: World) {
@@ -52,8 +53,9 @@ export function drawSurface(ctx: CanvasRenderingContext2D, w: World) {
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(hx + 14 * PX, hy - 9 * PX);
-  ctx.lineTo(hx + 14 * PX, sy + 70 + bob);
+  ctx.lineTo(hx + 14 * PX, sy + 26 + bob);
   ctx.stroke();
+  drawSprite(ctx, HOOK, { S: "#c8d4d6" }, hx + 14 * PX - 3 * PX - 1, sy + 26 + bob, PX); // hook on the end of the line
 
   if (w.w >= 640) {
     ctx.font = "12px ui-monospace, monospace";
@@ -68,15 +70,16 @@ export function drawSurface(ctx: CanvasRenderingContext2D, w: World) {
     ctx.fillText(msg, mx + 8, by - 17);
   }
 
-  // wave line, drawn last so it overlaps the hull
-  ctx.strokeStyle = "#3cc6c0";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let x = 0; x <= w.w; x += 6) {
-    const y = sy + Math.sin(x / 40 + t / 500) * 2;
-    if (x === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  // pixel wave line, drawn last so it overlaps the hull: 6px steps snapped to a 3px grid, foam on the crests
+  const base = Math.round(sy);
+  for (let x = 0; x < w.w; x += 6) {
+    const s = Math.sin(x / 40 + t / 500);
+    const y = Math.round((base + s * 3) / 3) * 3;
+    ctx.fillStyle = "#3cc6c0";
+    ctx.fillRect(x, y, 6, 4); // 4 tall on a 3px step so neighbours overlap: no seams
+    if (s > 0.55) {
+      ctx.fillStyle = "#9fe6e2";
+      ctx.fillRect(x, y - 3, 6, 3);
+    }
   }
-  ctx.stroke();
-  ctx.lineWidth = 1;
 }

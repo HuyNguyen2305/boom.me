@@ -22,7 +22,6 @@ function cardNearFish(): number | null {
 export function ProjectViewer({ projects }: { projects: Project[] }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState<number | null>(null);
-  const [near, setNear] = useState<number | null>(null);
   const p = open === null ? null : projects[open];
 
   useEffect(() => {
@@ -32,11 +31,6 @@ export function ProjectViewer({ projects }: { projects: Project[] }) {
   }, [open]);
 
   useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setNear(cardNearFish()));
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() !== "e" || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
       if (ref.current?.open) return;
@@ -47,31 +41,16 @@ export function ProjectViewer({ projects }: { projects: Project[] }) {
       const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-open-project]");
       if (btn) setOpen(Number(btn.dataset.openProject));
     };
-    update();
-    addEventListener("scroll", update, { passive: true });
-    addEventListener("resize", update);
     addEventListener("keydown", onKey);
     document.addEventListener("click", onClick);
     return () => {
-      cancelAnimationFrame(raf);
-      removeEventListener("scroll", update);
-      removeEventListener("resize", update);
       removeEventListener("keydown", onKey);
       document.removeEventListener("click", onClick);
     };
   }, []);
 
-  const hint = near === null ? null : projects[near];
-
   return (
     <>
-      <p
-        aria-hidden
-        className={`pointer-events-none fixed bottom-4 left-1/2 z-20 hidden -translate-x-1/2 border border-teal/40 bg-abyss/90 px-3 py-2 font-mono text-xs text-foam transition-opacity duration-150 sm:block ${hint && open === null ? "opacity-100" : "opacity-0"}`}
-      >
-        <kbd className="mr-2 border border-teal/40 px-1.5 text-teal">E</kbd>
-        {hint?.title}
-      </p>
       <dialog
         ref={ref}
         onClose={() => setOpen(null)}

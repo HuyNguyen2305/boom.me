@@ -1,7 +1,8 @@
 import { drawSurface } from "./entities/boat";
 import { drawBuoy } from "./entities/buoy";
+import { drawHint } from "./entities/hint";
 import { drawSeafloor } from "./entities/seafloor";
-import { createSchool, drawSchool } from "./entities/school";
+import { createSchool, drawSchool, type Band } from "./entities/school";
 import { drawSky } from "./entities/sky";
 import { depthBus } from "./events";
 import { createInput } from "./input";
@@ -12,6 +13,7 @@ import type { World } from "./world";
 type Bubble = { x: number; y: number; life: number };
 
 const PX = 3; // one sprite pixel = 3 css pixels (72 x 42 fish, as in the spec)
+const EDGE = 60; // the fish may swim anywhere between these margins
 
 export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: boolean }) {
   const ctx = canvas.getContext("2d")!;
@@ -22,7 +24,9 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
   let stops: Stop[] = [];
   let tilt = 0;
   let lastY = scrollY;
-  let swimX = 0; // distance swum left from the home lane
+  let swimX = 0; // distance swum left (negative: right) from the home lane
+  let used = false; // has the visitor steered yet? the hint fades once they have
+  let hint = 1;
   let raf = 0;
   const world: World = {
     w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, laneX: 0, depth: 0,
@@ -34,6 +38,9 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     world.surfaceY = readSurface();
     world.floorY = readFloor();
     world.laneX = readLane();
+    // one band of water per section: sea life lives inside its own layer
+    const bands: Band[] = stops.map((s, i) => ({ top: s.top, bottom: stops[i + 1]?.top ?? world.floorY, depth: s.depth }));
+    school.layout(bands);
   }
 
   function resize() {
@@ -60,8 +67,10 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
       if (input.held("down")) scrollBy({ top: 14, behavior: "instant" });
       const dx = (input.held("right") ? 1 : 0) - (input.held("left") ? 1 : 0);
       if (dx) world.facing = dx > 0 ? -1 : 1; // sprite head points left
-      swimX = Math.max(0, Math.min(world.laneX - 60, swimX - dx * 5));
+      swimX = Math.max(world.laneX - (world.w - EDGE), Math.min(world.laneX - EDGE, swimX - dx * 5));
+      if (input.any()) used = true;
     }
+    hint += ((used || scrollY > 120 ? 0 : 1) - hint) * 0.08;
 
     const target = opts.reducedMotion ? 0 : Math.max(-1, Math.min(1, vy / 20)) * 32; // head-down when diving
     tilt += (target - tilt) * 0.1;
@@ -105,6 +114,8 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     ctx.translate(-FISH_W / 2, -FISH_H / 2);
     drawFish(ctx, !opts.reducedMotion && Math.floor(t / (world.moving > 0.2 ? 120 : 300)) % 2 === 0);
     ctx.restore();
+
+    drawHint(ctx, world, hint);
   }
 
   function loop(t: number) {

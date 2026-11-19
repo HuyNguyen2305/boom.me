@@ -12,6 +12,7 @@ Current state of the portfolio build. Update at the end of every session.
 - [x] Pixel art restyled (outlined round fish, flat-shaded palms); short left shore with palms, boat centred, red/white buoy above the fish lane; content widened with a right lane for the fish
 - [x] Seamless sprites (bitmap blit), bigger palms (3 on shore), bigger buoy, redrawn fish, content column capped at 84rem with fish lane inside it
 - [x] Round moon, night clouds, buoy; background sea life by depth (minnows, tang, lantern fish, jellyfish, shark, whale, octopus, hordes); tilt fixed (head-down when diving); content column shifted 6rem left
+- [x] Hint above the fish (fades after first use), fish swims both ways, hero+About fit the first screen, sea life lives per layer (incl. a diver on Skills), varied coral floor, pixel waves, hook on the line, buoy with submerged float
 - [x] pnpm build, typecheck and test all pass
 
 ## In progress

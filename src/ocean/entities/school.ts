@@ -39,8 +39,33 @@ function lobe(set: (c: number, r: number, v: string) => void, x: number, y: numb
   }
 }
 
-/** Shark at 2px: outlined torpedo with a pointed snout, white belly, gill slits, tall dorsal and an upright crescent tail. */
-function shark(tailDy: number): string[] {
+/**
+ * Bends the rear of a straight sprite along a curved spine (tail tip up when beta > 0), pivoting at column x0 over
+ * `len` cells, so the lower body and the tail move together. Returns the outlined rows.
+ */
+function bend(src: string[][], cy0: number, x0: number, len: number, betaDeg: number, W: number, H: number, oy: number): string[] {
+  const k = ((betaDeg * Math.PI) / 180) / len;
+  const g = grid(W, H);
+  const put = setter(g);
+  src.forEach((row, y) =>
+    row.forEach((v, x) => {
+      if (v === ".") return;
+      for (const ox of [-0.25, 0.25]) {
+        for (const oyy of [-0.25, 0.25]) {
+          const s = x + ox - x0;
+          const d = y + oyy - cy0;
+          if (s <= 0 || Math.abs(k) < 1e-6) put(Math.round(x + ox), Math.round(oy + d), v);
+          else put(Math.round(x0 + Math.sin(k * s) / k + d * Math.sin(k * s)), Math.round(oy + (Math.cos(k * s) - 1) / k + d * Math.cos(k * s)), v);
+        }
+      }
+    }),
+  );
+  outline(g);
+  return g.map((row) => row.join(""));
+}
+
+/** The shark drawn straight at 2px: outlined torpedo with a pointed snout, white belly, gill slits, tall dorsal and an upright crescent tail. */
+function sharkSource() {
   const W = 80;
   const H = 46;
   const bw = 58;
@@ -50,10 +75,10 @@ function shark(tailDy: number): string[] {
   const half = (c: number) => {
     const t = c / bw;
     const h = t < 0.38 ? 7.2 * Math.pow(t / 0.38, 0.8) : 7.2 * Math.pow(Math.max(0, 1 - (t - 0.38) / 0.62), 1.15);
-    return Math.max(c > bw * 0.7 ? 1.3 : 0, h);
+    return Math.max(c > bw * 0.7 ? 2.1 : 0, h); // a sturdier tail root
   };
   // tail: one fat upright crescent polygon. Tall upper lobe, short lower lobe, concave trailing edge
-  const tc = cy + tailDy;
+  const tc = cy;
   const poly: [number, number][] = [[bw - 3, tc - 1], [bw + 14, tc - 22], [bw + 8, tc - 5], [bw + 12, tc + 11], [bw - 3, tc + 2]];
   const inside = (x: number, y: number) => {
     let hit = false;
@@ -99,8 +124,13 @@ function shark(tailDy: number): string[] {
   for (let k = 0; k < 4; k++) for (let r = cy - 4; r <= cy + 1; r++) set(21 + k * 2 - (r > cy - 2 ? 1 : 0), r, "D"); // gill slits
   [[8, cy - 2], [9, cy - 2], [8, cy - 1], [9, cy - 1]].forEach(([c, r]) => set(c!, r!, "E")); // eye
   for (let c = 3; c <= 11; c++) set(c, Math.round(cy + 2.5 - c * 0.12), "D"); // mouth
-  outline(g);
-  return g.map((row) => row.join(""));
+  return { g, cy };
+}
+
+/** The shark swims: the rear half of the body and the tail sway together, a little. */
+function shark(betaDeg: number): string[] {
+  const { g, cy } = sharkSource();
+  return bend(g, cy, 24, 48, betaDeg, 86, 66, 34);
 }
 
 /** The whale drawn straight: tapered body, a long tail arm and flukes. Foreshortening shrinks the flukes as the tail passes level. */
@@ -113,21 +143,21 @@ function whaleSource(fluke: number) {
   const put = setter(g);
   const set = (x: number, y: number, v: string) => put(Math.round(x), Math.round(y), v);
   // tail arm: a straight limb that thins toward the flukes
-  const [hx, hy, L] = [62, cy + 1, 34];
+  const [hx, hy, L] = [62, cy + 1, 30];
   for (let i = 0; i <= 200; i++) {
     const u = i / 200;
-    const r = 6.4 - u * 3;
+    const r = 8.4 - u * 4.6; // thick where it leaves the body
     for (let dy = -5; dy <= 5; dy += 0.5) for (let dx = -5; dx <= 5; dx += 0.5) if (dx * dx + dy * dy <= r * r) set(hx + u * L + dx, hy + dy, dy < -r * 0.35 ? "h" : dy > r * 0.4 ? "d" : "G");
   }
   // two flukes spread at right angles to the arm, swept back a little
-  for (const side of [-1, 1]) lobe(set, hx + L, hy, 0.3, side * 0.95, 19 * fluke, 4.6);
+  for (const side of [-1, 1]) lobe(set, hx + L, hy, 0.3, side * 0.95, 20 * fluke, 4.8);
   // body: a boxy superellipse (big blunt head) whose rear half narrows into the arm
   const rx = 35;
   const ry = 16;
   for (let r = 0; r < H; r++) {
     for (let c = 0; c < W; c++) {
       const dx = (c - cx) / rx;
-      const taper = dx > 0.23 ? 1 - 0.62 * Math.pow((dx - 0.23) / 0.77, 1.5) : 1;
+      const taper = dx > 0.23 ? 1 - 0.42 * Math.pow((dx - 0.23) / 0.77, 1.5) : 1; // a broad tail root
       const dy = (r - cy) / (ry * taper);
       if (Math.abs(dx) ** 3.2 + Math.abs(dy) ** 2.2 > 1) continue;
       const dyo = (r - cy) / ry;
@@ -150,35 +180,10 @@ function whaleSource(fluke: number) {
   return { g, cy };
 }
 
-/**
- * Whale at 2px. The rear half of the whole body, tail arm and flukes bend together along one curved spine that pivots
- * at the middle of the body, like a lever: tip up (beta > 0), level, tip down (beta < 0).
- */
+/** The whale swims: its whole rear half bends with the tail like a lever (tip up, level, tip down). */
 function whale(betaDeg: number): string[] {
-  const beta = (betaDeg * Math.PI) / 180;
-  const { g: src, cy: cy0 } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin(beta)));
-  const W = 120;
-  const H = 100;
-  const oy = 56; // row of the body's centre line in the output
-  const x0 = 32; // where the spine starts to bend
-  const k = beta / 64;
-  const g = grid(W, H);
-  const put = setter(g);
-  src.forEach((row, y) =>
-    row.forEach((v, x) => {
-      if (v === ".") return;
-      for (const ox of [-0.25, 0.25]) {
-        for (const oyy of [-0.25, 0.25]) {
-          const s = x + ox - x0;
-          const d = y + oyy - cy0;
-          if (s <= 0 || Math.abs(k) < 1e-6) put(Math.round(x + ox), Math.round(oy + d), v);
-          else put(Math.round(x0 + Math.sin(k * s) / k + d * Math.sin(k * s)), Math.round(oy + (Math.cos(k * s) - 1) / k + d * Math.cos(k * s)), v);
-        }
-      }
-    }),
-  );
-  outline(g);
-  return g.map((row) => row.join(""));
+  const { g, cy } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
+  return bend(g, cy, 32, 60, betaDeg, 120, 100, 56);
 }
 
 function octopus(f: number): string[] {
@@ -231,8 +236,8 @@ const SPR: Record<Kind, { frames: string[][]; pal: Pal; alpha: number; speed: nu
   minnow: { frames: [FISH], pal: { B: "#3cc6c0", b: "#8fe3df", D: "#2a9a95", F: "#2a9a95", E: "#071c24", G: "#8fe3df" }, alpha: 0.42, speed: 70 },
   tang: { frames: [TANG], pal: { B: "#e0c25a", b: "#f3e3a0", D: "#b89a35", F: "#b89a35", E: "#071c24", G: "#f3e3a0" }, alpha: 0.42, speed: 50 },
   lantern: { frames: [FISH], pal: { B: "#2f6f86", b: "#4a97ae", D: "#1f4d5f", F: "#1f4d5f", E: "#b8f2ee", G: "#b8f2ee" }, alpha: 0.55, speed: 40, glow: true },
-  shark: { frames: [shark(-1), shark(1)], pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
-  whale: { frames: [80, 45, 5, -30, -55, -30, 5, 45].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
+  shark: { frames: [10, 0, -10, 0].map(shark), pal: { G: "#4f6f8f", g: "#6f8dab", W: "#dce5ee", w: "#b4c2d0", D: "#2f455c", O: "#0e1620", E: "#0a0f14" }, alpha: 0.5, speed: 95, px: 2 },
+  whale: { frames: [50, 28, 4, -20, -34, -20, 4, 28].map(whale), pal: { G: "#3b74c4", h: "#6a9be0", d: "#2a58a0", W: "#8f9db3", w: "#c3cfe2", O: "#16336a", E: "#0a0f1a", e: "#f0f4fa" }, alpha: 0.42, speed: 40, px: 2 },
   octopus: { frames: [octopus(0), octopus(1)], pal: { B: "#c0605a", b: "#d98078", D: "#8f3f3a", W: "#f0d6c8", E: "#3a1a18" }, alpha: 0.38, speed: 25 },
   jelly: { frames: [jelly(0), jelly(1)], pal: { B: "#8fe3df", b: "#dffaf8", D: "#5fb8b2" }, alpha: 0.42, speed: 18, glow: true },
   horde: { frames: [TINY], pal: { B: "#8fb3b6" }, alpha: 0.36, speed: 60, spread: 200 },

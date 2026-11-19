@@ -94,7 +94,7 @@ dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
   /* full viewport width: pull back to the viewport's left edge, mirroring .column's left edge */
   --col-left: 1rem;
   width: 100vw; margin-left: calc(-1 * var(--col-left));
-  position: relative; z-index: 20; /* above the ocean canvas (z-10) so fish swim behind the boxes */
+  position: relative; z-index: 5; /* below the ocean canvas (z-10) so the fish swim in front of the boxes */
 }
 .skills-fade {
   overflow: hidden;

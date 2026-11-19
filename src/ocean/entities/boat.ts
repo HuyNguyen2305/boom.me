@@ -28,26 +28,12 @@ const COLORS = {
 };
 const PX = 3;
 
-// crescent moon: a disc with a bite taken out of it, soft edge in mist
-const MOON = Array.from({ length: 17 }, (_, i) => {
-  const dy = i - 8;
-  return Array.from({ length: 17 }, (_, j) => {
-    const dx = j - 8;
-    const d2 = dx * dx + dy * dy;
-    if (d2 > 64 || (dx - 4) ** 2 + (dy + 1) ** 2 <= 52) return ".";
-    return d2 > 49 ? "m" : "M";
-  }).join("");
-});
-const MOON_COLORS = { M: "#dcebea", m: "#8fb3b6" };
-
-/** The 150px sky strip: moon, fisherman in a wooden boat, speech bubble and the wave line. */
+/** Fisherman in a wooden boat with his speech bubble, and the wave line on the surface. */
 export function drawSurface(ctx: CanvasRenderingContext2D, w: World) {
   const sy = w.surfaceY - w.scrollY;
   if (sy < -80 || sy > w.h + 20) return;
   const t = w.reduced ? 0 : w.t;
   const bob = Math.sin(t / 900) * 2;
-
-  drawSprite(ctx, MOON, MOON_COLORS, w.w * 0.8, sy - 95, 4);
 
   const bx = Math.max(24, w.w * 0.16);
   const by = sy - 17 * PX + bob + 4; // hull sits low in the water

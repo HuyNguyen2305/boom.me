@@ -23,6 +23,11 @@
   --radius-*: initial;
 }
 
+/* the content column sits 6rem left of centre, toward the fisherman */
+.column { margin-inline: auto; max-width: 64rem; padding-inline: 1rem; }
+@media (min-width: 40rem) { .column { padding-inline: 1.5rem; } }
+@media (min-width: 64rem) { .column { margin-left: max(1rem, calc((100vw - 64rem) / 2 - 6rem)); margin-right: auto; } }
+
 html {
   color-scheme: dark;
   scroll-behavior: smooth;

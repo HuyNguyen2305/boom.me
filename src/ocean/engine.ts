@@ -1,6 +1,8 @@
 import { drawSurface } from "./entities/boat";
+import { drawBuoy } from "./entities/buoy";
 import { drawSeafloor } from "./entities/seafloor";
 import { createSchool, drawSchool } from "./entities/school";
+import { drawSky } from "./entities/sky";
 import { depthBus } from "./events";
 import { createInput } from "./input";
 import { depthAt, readFloor, readLane, readStops, readSurface, type Stop } from "./scroll";
@@ -75,7 +77,9 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     depthBus.set(world.depth);
 
     ctx.clearRect(0, 0, world.w, world.h);
+    drawSky(ctx, world);
     drawSchool(ctx, world, school);
+    drawBuoy(ctx, world);
     drawSurface(ctx, world);
     drawSeafloor(ctx, world);
 
@@ -96,7 +100,7 @@ export function createEngine(canvas: HTMLCanvasElement, opts: { reducedMotion: b
     ctx.save();
     ctx.translate(world.fishX, world.fishY);
     ctx.scale(world.facing, 1);
-    ctx.rotate((tilt * Math.PI) / 180);
+    ctx.rotate((-tilt * Math.PI) / 180); // head-down when diving (the sprite's head is on its left)
     ctx.scale(PX, PX);
     ctx.translate(-FISH_W / 2, -FISH_H / 2);
     drawFish(ctx, !opts.reducedMotion && Math.floor(t / (world.moving > 0.2 ? 120 : 300)) % 2 === 0);

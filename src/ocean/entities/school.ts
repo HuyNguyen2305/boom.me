@@ -186,19 +186,29 @@ function whaleSource(fluke: number) {
   }
   for (let x = x0 + 3; x <= 52; x++) set(x, top + 28 + x * 0.03, "d"); // the long, narrow mouth under the head
   [[14, top + 14], [15, top + 14], [14, top + 15], [15, top + 15]].forEach(([x, y]) => set(x!, y!, "E")); // small eye
-  // a short flipper: a tapered, rounded paddle that hangs from the belly and angles back
-  for (let k = 0; k <= 17; k++) {
-    const cx = 26 + k * 0.55;
-    const half = 1 + 4.2 * (1 - Math.pow(k / 17, 2.4));
-    for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) set(x, top + hmax - 3 + k, x <= cx - half + 1 ? "h" : x >= cx + half - 1 ? "d" : "G");
-  }
-  return { g, cy: top + thick(xe) / 2 };
+  const flipper = { x: 70, y: top + thick(70) - 3 }; // drawn after the bend so it keeps pointing down and back
+  return { g, cy: top + thick(xe) / 2, flipper };
 }
 
 /** The whale swims: everything behind the head bends with the tail like a lever (tip up, level, tip down). */
 function whale(betaDeg: number): string[] {
-  const { g, cy } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
-  return softRim(bend(g, cy, 56, 84, betaDeg, 170, 132, 76, null));
+  const [x0, len, oy] = [56, 84, 76];
+  const { g, cy, flipper } = whaleSource(0.4 + 0.6 * Math.abs(Math.sin((betaDeg * Math.PI) / 180)));
+  const out = bend(g, cy, x0, len, betaDeg, 170, 132, oy, null).map((r) => [...r]);
+  // the small flipper stays attached to the belly where the bend carries it, but is not itself bent
+  const k = ((betaDeg * Math.PI) / 180) / len;
+  const [s, d] = [flipper.x - x0, flipper.y - cy];
+  const nx = Math.abs(k) < 1e-6 ? flipper.x : x0 + Math.sin(k * s) / k + d * Math.sin(k * s);
+  const ny = Math.abs(k) < 1e-6 ? oy + d : oy + (Math.cos(k * s) - 1) / k + d * Math.cos(k * s);
+  for (let i = 0; i <= 13; i++) {
+    const cx = nx + i * 0.9;
+    const half = 1 + 3.2 * (1 - Math.pow(i / 13, 2.4));
+    for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) {
+      const row = out[Math.round(ny + i)];
+      if (row && x >= 0 && x < row.length) row[x] = x <= cx - half + 1 ? "h" : x >= cx + half - 1 ? "d" : "G";
+    }
+  }
+  return softRim(out.map((r) => r.join("")));
 }
 
 function octopus(f: number): string[] {

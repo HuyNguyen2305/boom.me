@@ -9,7 +9,7 @@ export const profile = {
   intro: "I design, build and deploy fast, reliable applications and websites.",
   bio: "Energetic software engineer. I take ideas from first sketches to shipped products.",
   highlights: [
-    { label: "Analyse & design", text: "Turning fuzzy needs into clear, usable designs." },
+    { label: "Analyse & design", text: "Turning fuzzy needs into clear data models, APIs and system designs." },
     { label: "Build & deploy", text: "Projects taken end to end, live and reliable." },
     { label: "Team or solo", text: "Happy in a team, just as effective alone." },
     { label: "AI-first", text: "Making the most of AI at every step of the work." },

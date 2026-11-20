@@ -28,11 +28,17 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
   let stops: Stop[] = [];
   let tilt = 0;
   let lastY = scrollY;
+  let sv = 0; // smoothed scroll speed
   let swimX = 0; // distance swum left (negative: right) from the home lane
   let used = false; // has the visitor steered yet? the hint fades once they have
   let hint = 1;
   let fyFrac = 0.42; // the fish's height on screen, as a fraction of the viewport
   let prevFy = 0;
+  // The back canvas is a tall strip that scrolls natively with the page. Redrawing a fixed canvas from scrollY lags the
+  // compositor by a frame on a trackpad and the sea life shakes. The strip is only moved when the view nears its edge.
+  let anchor = 0; // document y of the strip's top
+  let stripH = 0;
+  let docH = 0;
   let raf = 0;
   const world: World = {
     w: 0, h: 0, t: 0, scrollY: 0, surfaceY: 0, floorY: 0, laneX: 0, depth: 0,
@@ -44,6 +50,7 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
     world.surfaceY = readSurface();
     world.floorY = readFloor();
     world.laneX = readLane();
+    docH = document.body.offsetHeight; // not scrollHeight: the strip itself must never lengthen the page
     // one band of water per section: sea life lives inside its own layer
     const bands: Band[] = stops.map((s, i) => ({ top: s.top, bottom: stops[i + 1]?.top ?? world.floorY, depth: s.depth }));
     school.layout(bands);
@@ -53,9 +60,11 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
     const dpr = devicePixelRatio || 1;
     world.w = innerWidth;
     world.h = innerHeight;
-    for (const [c, x] of [[back, ctx], [front, fctx]] as const) {
+    stripH = world.h * 2;
+    back.style.height = `${stripH}px`;
+    for (const [c, x, h] of [[back, ctx, stripH], [front, fctx, world.h]] as const) {
       c.width = world.w * dpr;
-      c.height = world.h * dpr;
+      c.height = h * dpr;
       x.setTransform(dpr, 0, 0, dpr, 0, 0);
       x.imageSmoothingEnabled = false;
     }
@@ -64,7 +73,9 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
   }
 
   function frame(t: number) {
-    const vy = scrollY - lastY;
+    // trackpad scrolling arrives in uneven bursts: smooth the speed so the tilt, bubbles and tail beat don't flicker
+    sv += (scrollY - lastY - sv) * 0.15;
+    const vy = sv;
     lastY = scrollY;
     world.t = t;
     world.scrollY = scrollY;
@@ -114,12 +125,19 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
     world.depth = Math.round(depthAt(stops, scrollY + world.fishY)); // the fish's own depth
     depthBus.set(world.depth);
 
-    ctx.clearRect(0, 0, world.w, world.h);
-    drawSky(ctx, world);
-    drawSchool(ctx, world, school);
-    drawBuoy(ctx, world);
-    drawSurface(ctx, world);
-    drawSeafloor(ctx, world);
+    // re-centre the strip on the view when it drifts near an edge; never past the end of the page
+    const pad = (stripH - world.h) / 2;
+    if (Math.abs(scrollY - pad - anchor) > pad * 0.75) {
+      anchor = Math.round(Math.min(scrollY - pad, docH - stripH));
+      back.style.top = `${anchor}px`;
+    }
+    const strip: World = { ...world, scrollY: anchor, h: stripH }; // the back layer's own frame: offset and height of the strip
+    ctx.clearRect(0, 0, strip.w, strip.h);
+    drawSky(ctx, strip);
+    drawSchool(ctx, strip, school);
+    drawBuoy(ctx, strip);
+    drawSurface(ctx, strip);
+    drawSeafloor(ctx, strip);
 
     fctx.clearRect(0, 0, world.w, world.h);
     if (!opts.reducedMotion) {
@@ -137,7 +155,7 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
     }
 
     fctx.save();
-    fctx.translate(world.fishX, world.fishY);
+    fctx.translate(Math.round(world.fishX), Math.round(world.fishY));
     fctx.scale(world.facing, 1);
     fctx.rotate((-tilt * Math.PI) / 180); // head-down when diving (the sprite's head is on its left)
     fctx.scale(PX, PX);

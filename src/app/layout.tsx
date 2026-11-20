@@ -15,8 +15,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${inter.variable} ${jetbrains.variable}`}>
-      <body>{children}</body>
+    // browser extensions (Grammarly, dark-mode, translators...) add attributes to <html>/<body> before React hydrates
+    <html lang="en" className={`${manrope.variable} ${inter.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

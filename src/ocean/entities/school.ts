@@ -462,7 +462,7 @@ export function drawSchool(ctx: CanvasRenderingContext2D, w: World, school: Scho
     const pw = Math.max(...rows.map((r) => r.length)) * px;
     for (const [dx, dy] of spots) {
       ctx.save();
-      ctx.translate(x + dx + pw / 2, y + dy);
+      ctx.translate(Math.round(x + dx + pw / 2), Math.round(y + dy)); // whole pixels: a fractional offset shimmers while the page scrolls
       ctx.scale(c.dir > 0 ? -1 : 1, 1); // sprites face left
       drawSprite(ctx, rows, s.pal, -pw / 2, 0, px);
       ctx.restore();

@@ -12,7 +12,7 @@ export const profile = {
     { label: "Analyse & design", text: "Turning fuzzy needs into clear data models, APIs and system designs." },
     { label: "Build & deploy", text: "Projects taken end to end, live and reliable." },
     { label: "Team or solo", text: "Happy in a team, just as effective alone." },
-    { label: "AI-first", text: "Making the most of AI at every step of the work." },
+    { label: "Modern tooling", text: "Comfortable with AI tools and current workflows." },
     { label: "Always learning", text: "Eager to explore what comes next." },
   ],
   email: "huyworkandcontact@gmail.com",

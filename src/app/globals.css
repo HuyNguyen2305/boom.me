@@ -30,6 +30,7 @@
 html {
   color-scheme: dark;
   scroll-behavior: smooth;
+  overscroll-behavior: none; /* no rubber-band past the top or bottom */
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

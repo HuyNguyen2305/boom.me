@@ -19,7 +19,7 @@ export function Contact() {
       </div>
       {/* The sign the pixel diver holds (drawn in ocean/entities/signdiver.ts): this link sits exactly over it.
           Offsets: sand 44px − 10 + (56 − 15 rows) × 3px up from the floor; the pole is 11 cells × 3px right of the body centre. */}
-      <BackToSurface className="absolute bottom-[157px] left-[calc(62%+32px)] z-10 h-[45px] w-[108px] cursor-pointer rounded-sm max-sm:left-[calc(50%+32px)]" />
+      <BackToSurface className="absolute bottom-[157px] left-[calc(62%+32px)] h-[45px] w-[108px] cursor-pointer rounded-sm z-30 max-sm:left-[calc(50%+32px)]" />
     </Section>
   );
 }

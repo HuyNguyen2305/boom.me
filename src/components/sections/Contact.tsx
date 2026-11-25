@@ -11,7 +11,8 @@ export function Contact() {
     // the wrapper, not the Section's padded column, is the link's positioning box: the sign is drawn against the section bottom and viewport width
     <div className="relative">
     <Section id="contact" depth="−200 m · sea floor" title="Contact" band="bg-depth-4" className="pb-44 sm:pb-44">
-      <a href={`mailto:${profile.email}`} className="break-all font-display text-3xl font-bold sm:text-5xl">
+      {/* one line at any width: the size follows the column width (about 16.5 em of text), capped at 3rem */}
+      <a href={`mailto:${profile.email}`} className="whitespace-nowrap font-display text-[min(3rem,calc((100vw-2rem)/16.5))] font-bold sm:text-[min(3rem,calc((100vw-3rem)/16.5))]">
         {profile.email}
       </a>
       <div className="flex flex-wrap items-center gap-4 text-teal">

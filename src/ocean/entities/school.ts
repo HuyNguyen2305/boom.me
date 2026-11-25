@@ -348,6 +348,8 @@ function plan(depth: number): [Kind, number][] {
   if (depth < 30) return [["minnow", 2], ["tang", 1], ["angel", 1], ["clown", 1], ["puffer", 1], ["parrot", 1], ["horde", 1]];
   if (depth < 80) return [["tang", 2], ["minnow", 2], ["bluetang", 1], ["angel", 1], ["puffer", 1], ["barracuda", 1], ["horde", 1], ["jelly", 1], ["diver", 1]];
   if (depth < 160) return [["jelly", 2], ["lantern", 3], ["barracuda", 1], ["puffer", 1], ["horde", 1]];
+  // the short Works layers just above the floor: a tight lantern school, no octopus (that is the floor's)
+  if (depth < 190) return [["lantern", 4], ["jelly", 1], ["puffer", 1], ["horde", 1]];
   return [["octopus", 1], ["jelly", 2], ["lantern", 4]];
 }
 

@@ -43,6 +43,7 @@ test("E opens the project window, Esc closes it", async ({ page }) => {
   await page.goto("/");
   await page.locator("#works").scrollIntoViewIfNeeded();
   await page.evaluate(() => document.querySelector("[data-project]")!.scrollIntoView({ block: "center", behavior: "instant" }));
+  await page.locator("[data-project]").first().hover(); // E opens the hovered card (or the one the fish touches)
   await page.keyboard.press("e");
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();

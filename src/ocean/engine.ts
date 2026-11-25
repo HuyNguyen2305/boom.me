@@ -4,7 +4,7 @@ import { drawHint } from "./entities/hint";
 import { drawSeafloor } from "./entities/seafloor";
 import { createSchool, drawSchool, type Band } from "./entities/school";
 import { drawSky } from "./entities/sky";
-import { depthBus, fishYBus } from "./events";
+import { depthBus, fishXBus, fishYBus } from "./events";
 import { createInput } from "./input";
 import { depthAt, readFloor, readLane, readStops, readSurface, type Stop } from "./scroll";
 import { drawFish, FISH_H, FISH_W } from "./sprites";
@@ -120,6 +120,7 @@ export function createEngine(back: HTMLCanvasElement, front: HTMLCanvasElement, 
 
     world.fishX = narrow ? world.w - 50 : world.laneX - swimX;
     world.fishY = fy + (opts.reducedMotion ? 0 : Math.sin(t / 600) * 6);
+    fishXBus.set(world.fishX);
     fishYBus.set(world.fishY);
 
     world.depth = Math.round(depthAt(stops, scrollY + world.fishY)); // the fish's own depth

@@ -35,6 +35,9 @@ html {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+/* a project window is open: the page behind stays put (the gutter keeps the layout from jumping) */
+html:has(dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
+dialog.project { overscroll-behavior: contain; }
 body { @apply bg-abyss text-foam font-sans antialiased; }
 
 :focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }

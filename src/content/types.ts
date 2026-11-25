@@ -27,6 +27,8 @@ export type Project = {
   repo?: string;
   live?: string;
   image?: string;
+  /** Screenshots shown in the project window, in order */
+  gallery?: { src: string; caption: string }[];
 };
 
 export type SkillGroup = { name: string; items: Skill[] };

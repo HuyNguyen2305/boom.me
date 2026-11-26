@@ -62,35 +62,45 @@ body { @apply bg-abyss text-foam font-sans antialiased; }
   background-image: repeating-linear-gradient(0deg, rgb(60 198 192 / 0.06) 0 1px, transparent 1px 8px);
 }
 
-/* Project dialog: scale 0.96 + fade in 220ms, out 160ms; no motion for reduced-motion visitors */
+/* Project dialog: opens like a window: it grows from the card it was opened from (origin set in ProjectViewer), 340ms in, 180ms out,
+   then its parts follow in a short stagger. Transform, opacity and a small blur only; reduced motion gets a plain fade. */
 dialog.project {
   opacity: 0;
-  transform: scale(0.96);
+  transform: scale(0.35);
+  filter: blur(3px);
   transition:
-    opacity 160ms var(--ease-out),
-    transform 160ms var(--ease-out),
-    overlay 160ms allow-discrete,
-    display 160ms allow-discrete;
+    opacity 140ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    filter 180ms var(--ease-out),
+    overlay 180ms allow-discrete,
+    display 180ms allow-discrete;
 }
 dialog.project[open] {
   opacity: 1;
   transform: none;
-  transition-duration: 220ms;
+  filter: none;
+  transition: opacity 200ms var(--ease-out), transform 340ms var(--ease-out), filter 240ms var(--ease-out), overlay 340ms allow-discrete, display 340ms allow-discrete;
 }
 @starting-style {
-  dialog.project[open] { opacity: 0; transform: scale(0.96); }
+  dialog.project[open] { opacity: 0; transform: scale(0.35); filter: blur(3px); }
 }
 dialog.project::backdrop {
   background: rgb(4 17 24 / 0.72);
   opacity: 0;
   transition: opacity 160ms var(--ease-out), overlay 160ms allow-discrete, display 160ms allow-discrete;
 }
-dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
+dialog.project[open]::backdrop { opacity: 1; transition-duration: 340ms; }
 @starting-style {
   dialog.project[open]::backdrop { opacity: 0; }
 }
+@keyframes project-part { from { opacity: 0; transform: translateY(10px); } }
+dialog.project[open] .project-body > * { animation: project-part 320ms var(--ease-out) backwards; }
+dialog.project[open] .project-body > :nth-child(2) { animation-delay: 50ms; }
+dialog.project[open] .project-body > :nth-child(3) { animation-delay: 90ms; }
+dialog.project[open] .project-body > :nth-child(n+4) { animation-delay: 120ms; }
 @media (prefers-reduced-motion: reduce) {
-  dialog.project, dialog.project::backdrop { transition: none; transform: none; }
+  dialog.project, dialog.project::backdrop { transition: opacity 160ms ease; transform: none; filter: none; }
+  dialog.project[open] .project-body > * { animation: none; }
 }
 
 /* Skills: icons drift right to left, fading in and out at the edges. The track holds the list twice, so -50% loops it. */
@@ -119,3 +129,9 @@ dialog.project[open]::backdrop { opacity: 1; transition-duration: 220ms; }
   .skills-marquee [aria-hidden] { display: none; }
 }
 @keyframes marquee { to { transform: translateX(calc(-50% - 0.5rem)); } }
+
+/* Gallery: the new screenshot slides in from the side the visitor is heading; reduced motion gets a plain fade */
+@keyframes shot-in { from { opacity: 0; transform: translateX(var(--from)); } }
+@keyframes shot-fade { from { opacity: 0; } }
+.shot-in { animation: shot-in 260ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .shot-in { animation: shot-fade 160ms ease; } }

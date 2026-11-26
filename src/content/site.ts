@@ -103,6 +103,7 @@ export const projects: Project[] = [
       "Shipped it end to end, from the database to the shipper's phone",
     ],
     tech: ["Full stack", "Recommendation model", "Allocation model"],
+    repo: "https://github.com/HuyNguyen2305/FoodECommerce",
     image: "/work/ecommerce/homepage.webp",
     gallery: [
       { src: "/work/ecommerce/homepage.webp", caption: "Client home page: browse the menu and pick a dish." },
